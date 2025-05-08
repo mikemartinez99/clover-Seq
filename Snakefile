@@ -84,7 +84,6 @@ rule align:
         bt2_index = config["bt2_index"],
         maxMaps = config["maxMaps"],
         nPenalty = config["nPenalty"],
-        chooseMappings = "code/new_MM_choose_mappings.py",
         #sbatcchooseMappings = "code/choosemappings.py",
         minnontrnasize = config["minlength_nontRNA"],
         TMPDIR = "/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/misc/shared-software/workflows/tRAX_v2/temp"
@@ -99,11 +98,7 @@ rule align:
             --np {params.nPenalty} \
             --reorder \
             --ignore-qual \
-            -p {resources.cpus} | \
-        {params.chooseMappings} {params.database}/db-trnatable.txt \
-            --progname=TRAX \
-            --fqname={input.trim_1} \
-            --minnontrnasize={params.minnontrnasize} | \
-        samtools sort -T {resources.tmpdir}/{params.sample}_temp - -o {output.bam}
+            -p {resources.cpus} | 
+        samtools view -b -o {output.bam}    
     """
 
