@@ -1,2 +1,4 @@
 .snakemake
 *.out
+data/
+alignment/
