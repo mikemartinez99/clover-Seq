@@ -1,0 +1,56 @@
+#----- GDSC-tRAX v2 Configuration File -----------------#     
+#-------------------------------------------------------#
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# GENERAL SETTINGS
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+sample_txt: runfile.txt
+layout: "single"
+genome: "hg38"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# TRNA DATABASE TAR ARCHIVE PATH
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+trna_db: "/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases/hg38_db"
+bt2_index: "/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases/hg38_db/bt2_index/db-tRNAgenome"
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# TRIMMING PARAMETERS
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+adapter_1: "AGATCGGAAGAGCACACGTC"
+adapter_2: "GATCGTCGGACTGTAGAACTC"
+minlength: "15"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# ALIGNMENT PARAMETERS
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+maxMaps: "100"
+nPenalty: "5"
+
+#---- Is mapping too stringent (20% of bases are modified in tRNA)
+
+# AMino counts not informative
+#- Coverage plots are useful (normalized read count)
+# Mutations: Linear modeling and bundance (this will always be pairwise) - miRNA-specific data for mining
+# Estebans data are size selected (tRNA selecting anything under 200 nt in length (snRNAs, snoRNAs, tRNAs, miRNAs, fragments))
+# CCA, CC, C endpoint tails : shows maturity (pretRNA is usually longer than the mature tRNA)
+  #tRNA modifications heatmap
+
+# VOlcano plot for just tRNAs and then a separate one for all other small RNAs
+# 140 - 250 nts returned (120 of those are adapters)
+# Also might be interested in mapping tRNA fragments
+
+# Clean up microbes step....
+# Might also be working in zebrafish
+
+#----- Jargon...
+# Isodecoders - isoforms of tRNAs (gtRNAdb) --RSEM????? -> as long as you have a gtf
+# Isoacceptros - grouping by family (codon rdegeneracy)
+
+
+# Seed length too long
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# ALIGNMENT FILTERING PARAMETERS
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+minlength_nontRNA: "20"
+maxMappings: "50"
