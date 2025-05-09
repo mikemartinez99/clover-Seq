@@ -1,4 +1,7 @@
 .snakemake
 *.out
 data/
+trimming/
 alignment/
+unaligned/
+code/MM_Working_Scripts/
