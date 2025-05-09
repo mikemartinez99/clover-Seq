@@ -31,13 +31,13 @@ rule all:
         expand("trimming/logs/{sample}.cutadapt.report", sample = sample_list),
 
         #----- Rule alignment outputs
-        #expand("alignment/{sample}.aln.sam", sample = sample_list),
-
-        #----- Rule filter outouts
         expand("alignment/{sample}.alignment.log.txt", sample = sample_list),
         expand("alignment/{sample}.srt.bam", sample = sample_list),
         expand("unaligned/{sample}.unalign.fastq", sample = sample_list),
 
+        #----- Rule mark_duplicates outputs
+        expand("alignment/{sample}.mkdup.bam", sample = sample_list),
+        expand("alignment/{sample}.mkdup.log.txt", sample = sample_list),
     output:
         "done.txt"
     conda: "rnaseq1"
@@ -126,4 +126,32 @@ rule align:
         rm -rf alignment/{params.sample}.bam
         rm -rf alignment/{params.sample}.sub.bam
     """
+
+#----- Rule to mark duplicates
+rule mark_duplicates:
+    input:
+        bam = "alignment/{sample}.srt.bam"
+    output:
+        mkdup = "alignment/{sample}.mkdup.bam",
+        mkdupLog = "alignment/{sample}.mkdup.log.txt"
+    conda: "rnaseq1"
+    resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
+    params:
+        sample = lambda wildcards: wildcards.sample
+    shell: """
+    
+        #----- Run Picard mark Duplicates
+        picard -Xmx16G -Xms16G  \
+            MarkDuplicates \
+            I={input.bam} \
+            O={output.mkdup} \
+            M={output.mkdupLog} \
+            OPTICAL_DUPLICATE_PIXEL_DISTANCE=100 \
+            CREATE_INDEX=false  \
+            MAX_RECORDS_IN_RAM=4000000 \
+            ASSUME_SORTED=true \
+            MAX_FILE_HANDLES=768
+    
+    """
+
 
