@@ -4,6 +4,11 @@
 # Authors: Mike Martinez
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
+#----- TO DO
+#- Add columns in read counts to denote isoacceptor (i.e., the AA)
+#- Add code and conda environment to make some cool plots at the read counts step
+#- Add code to make some QC plots outside of multiqc
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # SET GLOBAL SCOPE PYTHON VARIABLES (EXECUTED BEFORE SNAKEMAKE)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -38,6 +43,16 @@ rule all:
         #----- Rule mark_duplicates outputs
         expand("alignment/{sample}.mkdup.bam", sample = sample_list),
         expand("alignment/{sample}.mkdup.log.txt", sample = sample_list),
+
+        #----- Rule tRNA_map_stats outputs
+        expand("tRNA_alignment_stats/{sample}.mkdup.bam.idxstats", sample = sample_list),
+        expand("tRNA_alignment_stats/{sample}.mkdup.bam.flagstat", sample = sample_list),
+
+        #----- Rule tRNA_count outputs
+        expand("tRNA_counts/tRNA.readcounts.tsv", sample = sample_list),
+        expand("tRNA_counts/tRNA.readcounts_tpm.tsv", sample = sample_list),
+        expand("tRNA_counts/tRNA.readcounts.ann.tsv", sample = sample_list),
+        expand("tRNA_counts/tRNA.readcounts_tpm.ann.tsv", sample = sample_list),
     output:
         "done.txt"
     conda: "rnaseq1"
@@ -151,7 +166,56 @@ rule mark_duplicates:
             MAX_RECORDS_IN_RAM=4000000 \
             ASSUME_SORTED=true \
             MAX_FILE_HANDLES=768
+
+        #----- Index the mkdup bam
+        samtools index {output.mkdup}
+    """
+
+#----- Rule to collate tRNA mapping statistics
+rule tRNA_map_stats:
+    input:
+        mkdup = "alignment/{sample}.mkdup.bam"
+    output:
+        idxStats = "tRNA_alignment_stats/{sample}.mkdup.bam.idxstats",
+        flagStats = "tRNA_alignment_stats/{sample}.mkdup.bam.flagstat"
+    conda: "trax_env"
+    resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
+    params: 
+        sample = lambda wildcards: wildcards.sample
+    shell: """
+    
+        #----- Collect metrics
+        samtools idxstats {input.mkdup} > {output.idxStats}
+        samtools flagstat {input.mkdup} > {output.flagStats}
     
     """
 
+#----- Rule to count tRNAs
+rule tRNA_count:
+    input:
+        expand("tRNA_alignment_stats/{sample}.mkdup.bam.idxstats", sample = sample_list)
+    output:
+        tRNA_counts = "tRNA_counts/tRNA.readcounts.tsv",
+        tRNA_tpms = "tRNA_counts/tRNA.readcounts_tpm.tsv",
+        isoAcc_anno = "tRNA_counts/tRNA.readcounts.ann.tsv",
+        isoAcc_tpms_anno = "tRNA_counts/tRNA.readcounts_tpm.ann.tsv"
+    conda: "rnaseq1"
+    resources: cpus="10", maxtime="2:00:00", mem_mb="60gb",
+    params:
+        countScript = config["countScript"],
+        tpm_normalization = config["tpm_normalization"]
+    shell: """
+    
+        #----- Count tRNAs
+        echo -ne tRNA_ID"\t"Length"\t" > {output.tRNA_counts} 
+        echo {input} | tr " " "\t"| sed s/"tRNA_alignment_stats\/"//g| sed s/".mkdup.bam.idxstats"//g >> {output.tRNA_counts}
+        paste {input}| awk -f {params.countScript} >> {output.tRNA_counts}
 
+        #----- Run TPM normalization
+        python {params.tpm_normalization} {output.tRNA_counts}
+
+        #----- Add isoacceptor information
+        awk 'BEGIN {{OFS="\t"}} NR==1 {{print $0, "Isoacceptor"; next}} {{split($1, a, "-"); print $0, a[2]}}' {output.tRNA_counts} > {output.isoAcc_anno}
+        awk 'BEGIN {{OFS="\t"}} NR==1 {{print $0, "Isoacceptor"; next}} {{split($1, a, "-"); print $0, a[2]}}' {output.tRNA_tpms} > {output.isoAcc_tpms_anno}
+
+    """

@@ -55,3 +55,9 @@ nPenalty: "5"
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 minlength_nontRNA: "20"
 maxMappings: "50"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# COUNT PARAMETERS
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+countScript: "code/tRNA_counts.awk"
+tpm_normalization: "code/tRNA_readcount_to_tpm.py"
