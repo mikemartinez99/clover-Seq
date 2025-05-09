@@ -31,9 +31,13 @@ rule all:
         expand("trimming/logs/{sample}.cutadapt.report", sample = sample_list),
 
         #----- Rule alignment outputs
-        expand("alignment/{sample}.bam", sample = sample_list)
+        #expand("alignment/{sample}.aln.sam", sample = sample_list),
 
-        #----- Rule filter_and_sort_alignment outputs
+        #----- Rule filter outouts
+        expand("alignment/{sample}.alignment.log.txt", sample = sample_list),
+        expand("alignment/{sample}.srt.bam", sample = sample_list),
+        expand("unaligned/{sample}.unalign.fastq", sample = sample_list),
+
     output:
         "done.txt"
     conda: "rnaseq1"
@@ -75,16 +79,18 @@ rule align:
     input:
         trim_1 = "trimming/{sample}.R1.trim.fastq.gz",
     output:
-        bam = "alignment/{sample}.bam"
+        #sam = "alignment/{sample}.aln.sam",
+        alignLog = "alignment/{sample}.alignment.log.txt",
+        unalign = "unaligned/{sample}.unalign.fastq",
+        srtBam = "alignment/{sample}.srt.bam"
     conda: "trax_env"
-    resources: cpus="10", maxtime="6:00:00", mem_mb="60gb"
+    resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
     params:
         sample = lambda wildcards: wildcards.sample,
         database = config["trna_db"],
         bt2_index = config["bt2_index"],
         maxMaps = config["maxMaps"],
         nPenalty = config["nPenalty"],
-        #sbatcchooseMappings = "code/choosemappings.py",
         minnontrnasize = config["minlength_nontRNA"],
         TMPDIR = "/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/misc/shared-software/workflows/tRAX_v2/temp"
     shell: """
@@ -93,12 +99,31 @@ rule align:
         bowtie2 \
             -x {params.bt2_index} \
             -U {input.trim_1} \
+            -D 20 -R 3 -N 1 -L 12 -i S,1,0.50 \
             -k {params.maxMaps} \
             --very-sensitive \
             --np {params.nPenalty} \
             --reorder \
             --ignore-qual \
-            -p {resources.cpus} | 
-        samtools view -b -o {output.bam}    
+            --un {output.unalign} \
+            -p {resources.cpus} \
+            -S alignment/{params.sample}.aln.sam 2> {output.alignLog}
+
+        #----- subset reads for aligned length > 16 & < 28bp & any reads with gaps (XO/XG tags)
+        samtools view -h alignment/{params.sample}.aln.sam | \
+            awk 'BEGIN {{OFS="\t"}} $1 ~ /^@/ || ((length($10) > 15 && length($10) <= 90) && ($0 !~ /XG:i:[^0]/ && $0 !~ /XO:i:[^0]/)) {{print $0}}' | \
+            samtools view -Sb - > alignment/{params.sample}.bam
+
+        #----- filter for any reads with MAPQ <=1
+        samtools view -h -q 2 alignment/{params.sample}.bam > alignment/{params.sample}.sub.bam
+
+        #----- Sort and filter the bam file
+        samtools sort -@ 4 alignment/{params.sample}.sub.bam > {output.srtBam}
+        samtools index {output.srtBam}
+
+        #----- Remove temp files
+        rm -rf alignment/{params.sample}.aln.sam
+        rm -rf alignment/{params.sample}.bam
+        rm -rf alignment/{params.sample}.sub.bam
     """
 
