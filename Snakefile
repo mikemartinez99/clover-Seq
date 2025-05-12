@@ -5,9 +5,15 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 #----- TO DO
-#- Add columns in read counts to denote isoacceptor (i.e., the AA)
+
 #- Add code and conda environment to make some cool plots at the read counts step
 #- Add code to make some QC plots outside of multiqc
+#- Add prebuilt configs for different host species
+#- Built tRNA-only bowtie2 indices
+#- Figure out the mitoDB issue
+#- Build tRNA + mitoRNA db if we can figure out the mito issue
+#- Break down the coveragePlot source code into new code
+#- Conda environment for featureCounts
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # SET GLOBAL SCOPE PYTHON VARIABLES (EXECUTED BEFORE SNAKEMAKE)
@@ -35,12 +41,12 @@ rule all:
         expand("trimming/{sample}.R1.trim.fastq.gz", sample = sample_list),
         expand("trimming/logs/{sample}.cutadapt.report", sample = sample_list),
 
-        #----- Rule alignment outputs
+        #----- Rule tRNA_alignment outputs
         expand("alignment/{sample}.alignment.log.txt", sample = sample_list),
         expand("alignment/{sample}.srt.bam", sample = sample_list),
         expand("unaligned/{sample}.unalign.fastq", sample = sample_list),
 
-        #----- Rule mark_duplicates outputs
+        #----- Rule tRNA_mark_duplicates outputs
         expand("alignment/{sample}.mkdup.bam", sample = sample_list),
         expand("alignment/{sample}.mkdup.log.txt", sample = sample_list),
 
@@ -49,10 +55,25 @@ rule all:
         expand("tRNA_alignment_stats/{sample}.mkdup.bam.flagstat", sample = sample_list),
 
         #----- Rule tRNA_count outputs
-        expand("tRNA_counts/tRNA.readcounts.tsv", sample = sample_list),
-        expand("tRNA_counts/tRNA.readcounts_tpm.tsv", sample = sample_list),
-        expand("tRNA_counts/tRNA.readcounts.ann.tsv", sample = sample_list),
-        expand("tRNA_counts/tRNA.readcounts_tpm.ann.tsv", sample = sample_list),
+        "tRNA_counts/tRNA.readcounts.tsv", 
+        "tRNA_counts/tRNA.readcounts_tpm.tsv", 
+        "tRNA_counts/tRNA.readcounts.ann.tsv", 
+        "tRNA_counts/tRNA.readcounts_tpm.ann.tsv", 
+
+        #----- Rule genome_alignment outputs
+        expand("genome_alignment/{sample}.srt.bam", sample = sample_list),
+
+        #----- Rule genome_mark_duplicates outputs
+        expand("genome_alignment/{sample}.mkdup.bam", sample = sample_list),
+        expand("genome_alignment/{sample}.mkdup.log.txt", sample = sample_list),
+
+        #----- Rule to filter genome alignment
+        expand("genome_filtered/{sample}.mkdup.filt.bam", sample = sample_list),
+
+        #----- Rule to count genome counts
+        "genome_counts/featurecounts.readcounts.ann.tsv", 
+        "genome_count/featurecounts.readcounts_tpm.ann.tsv"
+        
     output:
         "done.txt"
     conda: "rnaseq1"
@@ -90,7 +111,7 @@ rule trimming:
     """
 
 #----- Rule to align samples to tRNA database (need db-trnatable.txt)
-rule align:
+rule tRNA_align:
     input:
         trim_1 = "trimming/{sample}.R1.trim.fastq.gz",
     output:
@@ -102,12 +123,9 @@ rule align:
     resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
     params:
         sample = lambda wildcards: wildcards.sample,
-        database = config["trna_db"],
         bt2_index = config["bt2_index"],
         maxMaps = config["maxMaps"],
         nPenalty = config["nPenalty"],
-        minnontrnasize = config["minlength_nontRNA"],
-        TMPDIR = "/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/misc/shared-software/workflows/tRAX_v2/temp"
     shell: """
     
         #----- Run Bowtie2 alignment (removed the --reorder arg from original code to speed up...don't see the need with SE data)
@@ -124,7 +142,7 @@ rule align:
             -p {resources.cpus} \
             -S alignment/{params.sample}.aln.sam 2> {output.alignLog}
 
-        #----- subset reads for aligned length > 16 & < 28bp & any reads with gaps (XO/XG tags)
+        #----- subset reads for aligned length > 15 & < 90bp & any reads with gaps (XO/XG tags)
         samtools view -h alignment/{params.sample}.aln.sam | \
             awk 'BEGIN {{OFS="\t"}} $1 ~ /^@/ || ((length($10) > 15 && length($10) <= 90) && ($0 !~ /XG:i:[^0]/ && $0 !~ /XO:i:[^0]/)) {{print $0}}' | \
             samtools view -Sb - > alignment/{params.sample}.bam
@@ -143,7 +161,7 @@ rule align:
     """
 
 #----- Rule to mark duplicates
-rule mark_duplicates:
+rule tRNA_mark_duplicates:
     input:
         bam = "alignment/{sample}.srt.bam"
     output:
@@ -218,4 +236,134 @@ rule tRNA_count:
         awk 'BEGIN {{OFS="\t"}} NR==1 {{print $0, "Isoacceptor"; next}} {{split($1, a, "-"); print $0, a[2]}}' {output.tRNA_counts} > {output.isoAcc_anno}
         awk 'BEGIN {{OFS="\t"}} NR==1 {{print $0, "Isoacceptor"; next}} {{split($1, a, "-"); print $0, a[2]}}' {output.tRNA_tpms} > {output.isoAcc_tpms_anno}
 
+    """
+
+#----- Rule to align unmapped reads to host genome
+rule genome_align:
+    input:
+        unalign = "unaligned/{sample}.unalign.fastq",
+    output:
+        genomeAlign = "genome_alignment/{sample}.srt.bam"
+    conda: "trax_env"
+    resources: cpus="12", maxtime="2:00:00", mem_mb="60gb",
+    params:
+        sample = lambda wildcards: wildcards.sample,
+        genome = config["genome"],
+        genome_bt2_index = config["genome_bt2_index"]
+    shell: """
+    
+        #----- Align to host genome
+        bowtie2 \
+            -x {params.genome_bt2_index} \
+            -U {input.unalign} \
+            --very-sensitive-local \
+            -p {resources.cpus} \
+            --un genome_alignment/{params.sample}.unalign.fastq.gz \
+            -S genome_alignment/{params.sample}.aln.sam \
+            2>genome_alignment/{params.sample}_genome.log.txt
+
+        #----- Sort 
+        samtools view -Sb genome_alignment/{params.sample}.aln.sam | \
+            samtools sort -@ 4 - > {output.genomeAlign}
+
+        #----- Index
+        samtools index {output.genomeAlign}
+
+        #----- Remove temp files
+        rm -rf genome_alignment/{params.sample}.aln.sam
+    """
+
+#----- Rule to make genome duplicates
+rule genome_mark_duplicates:
+    input:
+        bam = "genome_alignment/{sample}.srt.bam"
+    output:
+        mkdup = "genome_alignment/{sample}.mkdup.bam",
+        mkdupLog = "genome_alignment/{sample}.mkdup.log.txt"
+    conda: "rnaseq1"
+    resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
+    params:
+        sample = lambda wildcards: wildcards.sample
+    shell: """
+    
+        #----- Run Picard mark Duplicates
+        picard -Xmx16G -Xms16G  \
+            MarkDuplicates \
+            I={input.bam} \
+            O={output.mkdup} \
+            M={output.mkdupLog} \
+            OPTICAL_DUPLICATE_PIXEL_DISTANCE=100 \
+            CREATE_INDEX=false  \
+            MAX_RECORDS_IN_RAM=4000000 \
+            ASSUME_SORTED=true \
+            MAX_FILE_HANDLES=768
+
+    """
+
+#----- Rule to filter genome alignment
+rule filter_genome_alignment:
+    input:
+        mkdup = "genome_alignment/{sample}.mkdup.bam"
+    output:
+        filtered = "genome_filtered/{sample}.mkdup.filt.bam"
+    conda: "rnaseq1"
+    resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
+    params:
+        sample = lambda wildcards: wildcards.sample
+    shell: """
+    
+        #----- Filter
+        samtools view -h {input.mkdup} | \
+            awk 'BEGIN {{OFS="\t"}} $1 ~ /^@/ || ((length($10) > 15 && length($10) <= 90) && ($0 !~ /XG:i:[^0]/ && $0 !~ /XO:i:[^0]/)) {{print $0}}' | \
+            samtools view -Sb - > genome_alignment/{params.sample}.sub.bam
+
+        #----- filter for any reads with MAPQ <=1
+        samtools view -h -b -q 2 genome_alignment/{params.sample}.sub.bam > {output.filtered}  
+
+        #----- Index the mkdup bam
+        samtools index {output.filtered}
+
+        #----- Remove temp files
+        rm -rf genome_alignment/{params.sample}.sub.bam
+    
+    """
+
+#----- Rule to count genome
+rule genome_counts:
+    input:
+        expand("genome_filtered/{sample}.mkdup.filt.bam", sample = sample_list)
+    output:
+        genomeCounts = "genome_counts/featurecounts.readcounts.ann.tsv",
+        tpms = "genome_count/featurecounts.readcounts_tpm.ann.tsv"
+    conda: "rnaseq1"
+    resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
+    params:
+        featureCounts = config["featureCounts"],
+        layout = config["layout"],
+        fc_strand = config["fc_strand"],
+        genome_gtf = config["genome_gtf"],
+        fc_ann_script = config["fc_ann_script"],
+        genome_tpms = config["genome_tpm_script"]
+    shell: """
+    
+        #----- Run featurecounts
+        {params.featureCounts} \
+            -T 32 \
+            -Q 10 \
+            -s {params.fc_strand} \
+            -a {params.genome_gtf} \
+            -o genome_counts/featurecounts.readcounts.raw.tsv \
+            {input}
+
+        #----- Clean up counts
+        sed s/"genome_alignment\/"//g genome_counts/featurecounts.readcounts.raw.tsv| \
+            sed s/".mkdup.filt.bam"//g| tail -n +2 > genome_counts/featurecounts.readcounts.tsv
+
+        #----- Run TPM normalization
+        python {params.genome_tpms} genome_counts/featurecounts.readcounts.tsv {params.layout}
+
+        #----- Run annotation script
+        python {params.fc_ann_script} {params.genome_gtf} genome_counts/featurecounts.readcounts.tsv > {output.genomeCounts}
+        python {params.fc_ann_script} {params.genome_gtf} genome_counts/featurecounts.readcounts_tpm.tsv > {output.tpms}
+    
     """

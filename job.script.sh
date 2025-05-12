@@ -2,8 +2,7 @@
 
 #SBATCH --job-name=cloverSeq
 #SBATCH --nodes=1
-#SBATCH --partition=preempt1
-#SBATCH --account=dac
+#SBATCH --partition=standard
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=16  
 #SBATCH --time=60:00:00
@@ -12,11 +11,11 @@
 #SBATCH --output=cloverSeq_%j.out
 
 #----- START
-echo "#------------------------ DEBUGGING ------------------------#"
+echo "#------------------------ Initialization ------------------------#"
 echo "Starting job: $SLURM_JOB_NAME (Job ID: $SLURM_JOB_ID)"
 echo "Running on node: $(hostname)"
 echo "Start time: $(date)"
-echo -e "#--------------------------------------------------------#"
+echo -e "#-------------------------------------------------------------#"
 
 
 #----- Source conda and activate snakemake
