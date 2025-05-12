@@ -72,7 +72,6 @@ rule all:
 
         #----- Rule to count genome counts
         "genome_counts/featurecounts.readcounts.ann.tsv", 
-        "genome_count/featurecounts.readcounts_tpm.ann.tsv"
         
     output:
         "done.txt"
@@ -334,7 +333,6 @@ rule genome_counts:
         expand("genome_filtered/{sample}.mkdup.filt.bam", sample = sample_list)
     output:
         genomeCounts = "genome_counts/featurecounts.readcounts.ann.tsv",
-        tpms = "genome_count/featurecounts.readcounts_tpm.ann.tsv"
     conda: "rnaseq1"
     resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
     params:
@@ -359,11 +357,7 @@ rule genome_counts:
         sed s/"genome_alignment\/"//g genome_counts/featurecounts.readcounts.raw.tsv| \
             sed s/".mkdup.filt.bam"//g| tail -n +2 > genome_counts/featurecounts.readcounts.tsv
 
-        #----- Run TPM normalization
-        python {params.genome_tpms} genome_counts/featurecounts.readcounts.tsv {params.layout}
-
         #----- Run annotation script
         python {params.fc_ann_script} {params.genome_gtf} genome_counts/featurecounts.readcounts.tsv > {output.genomeCounts}
-        python {params.fc_ann_script} {params.genome_gtf} genome_counts/featurecounts.readcounts_tpm.tsv > {output.tpms}
     
     """
