@@ -17,6 +17,8 @@
 library(ggplot2)
 library(reshape2)
 library(dplyr)
+library(magrittr)
+library(tidyr)
 library(RColorBrewer)
 library(ggrepel)
 library(cowplot)
@@ -29,10 +31,10 @@ if (length(args) < 2) {
 }
 
 input_tsv <- args[1]
-output_dir <- args[2]
+outputDir <- args[2]
 
-if (!dir.exists(output_dir)) {
-  dir.create(output_dir)
+if (!dir.exists(outputDir)) {
+  dir.create(outputDir)
 }
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -44,29 +46,23 @@ trna <- read.csv(input_tsv, sep = "\t")
 trna <- trna[-437,]
 trna$Length <- NULL
 
-#----- Melt into long format
-trnaMelt <- pivot_longer(trna,
-                         -c(tRNA_ID, Isoacceptor),
-                         names_to = "Sample",
-                         values_to = "count")
-
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # GROUPED BY ISOACCEPTOR
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 #----- Calculate relative abundance
 trnaRelAbund <- trna %>%
-  pivot_longer(-c(tRNA_ID, Isoacceptor), names_to = "Sample", values_to = "count") %>%
-  group_by(Isoacceptor) %>%
-  mutate(relative_abundance = count / sum(count)) %>%
-  ungroup()
+  tidyr::pivot_longer(-c(tRNA_ID, Isoacceptor), names_to = "Sample", values_to = "count") %>%
+  dplyr::group_by(Isoacceptor) %>%
+  dplyr::mutate(relative_abundance = count / sum(count)) %>%
+  dplyr::ungroup()
 
 #----- Calculate absolute abundance
 trnaAbAbund <- trna %>%
-  pivot_longer(-c(tRNA_ID, Isoacceptor), names_to = "Sample", values_to = "count") %>%
-  group_by(Isoacceptor) %>%
-  mutate(absolute_abundance = sum(count)) %>%
-  ungroup()
+  tidyr::pivot_longer(-c(tRNA_ID, Isoacceptor), names_to = "Sample", values_to = "count") %>%
+  dplyr::group_by(Isoacceptor) %>%
+  dplyr::mutate(absolute_abundance = sum(count)) %>%
+  dplyr::ungroup()
 
 #----- Set color palette
 color_palette <- c(
@@ -88,7 +84,7 @@ trnaAbAbund$Isoacceptor <- factor(trnaAbAbund$Isoacceptor, levels = c(
 ))
 
 #----- Plot relative abundance barplot
-relAbund <- ggplot(trnaRelAbund, aes(x = Isoacceptor, y = relative_abundance*100, fill = Sample)) +
+relAbund <- ggplot2::ggplot(trnaRelAbund, aes(x = Isoacceptor, y = relative_abundance*100, fill = Sample)) +
   geom_bar(stat = "identity") +
   scale_fill_manual(values = color_palette) +
   labs(y = "Relative Abundance",
@@ -98,9 +94,10 @@ relAbund <- ggplot(trnaRelAbund, aes(x = Isoacceptor, y = relative_abundance*100
   theme(axis.title = element_text(size = 18, face = "bold"),
         axis.text.y = element_text(size = 16),
         axis.text.x = element_text(size = 16, angle = 40, hjust = 1))
+ggplot2::ggsave(relAbund, file = paste0(outputDir, "tRNA_relAbund_by_sample.png"), width = 12, height = 10)
 
 #----- Plot absolute abundance barplot
-absAbund <- ggplot(trnaAbAbund, aes(x = Isoacceptor, y = absolute_abundance, fill = Sample)) +
+absAbund <- ggplot2::ggplot(trnaAbAbund, aes(x = Isoacceptor, y = absolute_abundance, fill = Sample)) +
   geom_bar(stat = "identity") +
   scale_fill_manual(values = color_palette) +
   labs(y = "Counts",
@@ -110,9 +107,13 @@ absAbund <- ggplot(trnaAbAbund, aes(x = Isoacceptor, y = absolute_abundance, fil
   theme(axis.title = element_text(size = 18, face = "bold"),
         axis.text.y = element_text(size = 16),
         axis.text.x = element_text(size = 16, angle = 40, hjust = 1))
+ggplot2::ggsave(absAbund, file = paste0(outputDir, "tRNA_absAbund_by_sample.png"), width = 12, height = 10)
+
 
 #----- Combine the plots
 bySample <- cowplot::plot_grid(absAbund, relAbund, ncol = 1)
+ggplot2::ggsave(bySample, file = paste0(outputDir, "tRNA_abundance_summary_by_sample.png"), width = 12, height = 10)
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # GROUPED BY SAMPLE
@@ -120,16 +121,16 @@ bySample <- cowplot::plot_grid(absAbund, relAbund, ncol = 1)
 
 #----- Calculate relative abundance
 sampleRelAbund <- trna %>%
-  pivot_longer(-c(tRNA_ID, Isoacceptor), names_to = "Sample", values_to = "count") %>%
-  group_by(Sample) %>%
-  mutate(relative_abundance = count / sum(count)) %>%
-  ungroup()
+  tidyr::pivot_longer(-c(tRNA_ID, Isoacceptor), names_to = "Sample", values_to = "count") %>%
+  dplyr::group_by(Sample) %>%
+  dplyr::mutate(relative_abundance = count / sum(count)) %>%
+  dplyr::ungroup()
 
 sampleAbAbund <- trna %>%
-  pivot_longer(-c(tRNA_ID, Isoacceptor), names_to = "Sample", values_to = "count") %>%
-  group_by(Sample) %>%
-  mutate(absolute_abundance = sum(count)) %>%
-  ungroup()
+  tidyr::pivot_longer(-c(tRNA_ID, Isoacceptor), names_to = "Sample", values_to = "count") %>%
+  dplyr::group_by(Sample) %>%
+  dplyr::mutate(absolute_abundance = sum(count)) %>%
+  dplyr::ungroup()
 
 #----- Factor the isoacceptors
 sampleRelAbund$Isoacceptor <- factor(sampleRelAbund$Isoacceptor, levels = c(
@@ -143,7 +144,7 @@ sampleAbAbund$Isoacceptor <- factor(sampleAbAbund$Isoacceptor, levels = c(
 ))
 
 #----- Plot relative abundance barplot
-relAbundISO <- ggplot(sampleRelAbund, aes(x = Sample, y = relative_abundance*100, fill = Isoacceptor)) +
+relAbundISO <- ggplot2::ggplot(sampleRelAbund, aes(x = Sample, y = relative_abundance*100, fill = Isoacceptor)) +
   geom_bar(stat = "identity") +
   scale_fill_manual(values = color_palette) +
   labs(y = "Relative Abundance",
@@ -153,9 +154,11 @@ relAbundISO <- ggplot(sampleRelAbund, aes(x = Sample, y = relative_abundance*100
   theme(axis.title = element_text(size = 18, face = "bold"),
         axis.text.y = element_text(size = 16),
         axis.text.x = element_text(size = 16, angle = 40, hjust = 1))
+ggplot2::ggsave(relAbundISO, file = paste0(outputDir, "tRNA_relAbund_by_isoacceptor.png"), width = 12, height = 10)
+
 
 #----- Plot absolute abundance barplot
-absAbundISO <- ggplot(sampleAbAbund, aes(x = Sample, y = absolute_abundance, fill = Isoacceptor)) +
+absAbundISO <- ggplot2::ggplot(sampleAbAbund, aes(x = Sample, y = absolute_abundance, fill = Isoacceptor)) +
   geom_bar(stat = "identity") +
   scale_fill_manual(values = color_palette) +
   labs(y = "Counts",
@@ -165,9 +168,13 @@ absAbundISO <- ggplot(sampleAbAbund, aes(x = Sample, y = absolute_abundance, fil
   theme(axis.title = element_text(size = 18, face = "bold"),
         axis.text.y = element_text(size = 16),
         axis.text.x = element_text(size = 16, angle = 40, hjust = 1))
+ggplot2::ggsave(absAbundISO, file = paste0(outputDir, "tRNA_absAbund_by_isoacceptor.png"), width = 12, height = 10)
+
 
 #----- Combine the plots
 byIsoAcc <- cowplot::plot_grid(absAbundISO, relAbundISO, ncol = 1)
+ggplot2::ggsave(byIsoAcc, file = paste0(outputDir, "tRNA_abundance_summary_by_isoacceptor.png"), width = 12, height = 10)
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # EXPLORATORY DATA ANALYSIS
@@ -182,13 +189,13 @@ trna_eda$tRNA_ID <- NULL
 #----- Explore variance
 variance <- apply(trna_eda, 1, var)
 variance <- sort(variance, decreasing = TRUE)
-plot(variance,
-     las = 1, 
-     main = "Sample tRNA Gene Expression Variance",
-     xlab = "nTNRAs",
-     cex.lab = 1.4,
-     cex.axis = 1.1,
-     font.lab = 2)
+#plot(variance,
+ #    las = 1, 
+  #   main = "Sample tRNA Gene Expression Variance",
+   #  xlab = "nTNRAs",
+   #  cex.lab = 1.4,
+    # cex.axis = 1.1,
+    # font.lab = 2)
 
 #----- Generate PCs
 generatePCs <- function(MAT, VARS, NFEATURES) {
@@ -229,9 +236,9 @@ loadings <- PCs[[1]]
 loadings$Sample <- rownames(loadings)
 
 #----- Plot PCA
-PCAplot <- ggplot(loadings, aes(x = PC1, y = PC2, color = Sample, label = Sample)) +
+PCAplot <- ggplot2::ggplot(loadings, aes(x = PC1, y = PC2, color = Sample, label = Sample)) +
   geom_point(size = 4) +
-  geom_text_repel() +
+  ggrepel::geom_text_repel() +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_vline(xintercept = 0, linetype = "dashed") +
   scale_color_manual(values = color_palette) +
@@ -241,6 +248,7 @@ PCAplot <- ggplot(loadings, aes(x = PC1, y = PC2, color = Sample, label = Sample
   theme(axis.text = element_text(size = 14, face = "bold"),
         axis.title = element_text(size = 16, face = "bold"),
         legend.position = "none")
+ggplot2::ggsave(PCAplot, file = paste0(outputDir, "PCA_Plot.png"), width = 8, height = 8)
 
 
 

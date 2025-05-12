@@ -75,12 +75,17 @@ rule all:
         
     output:
         "done.txt"
-    conda: "rnaseq1"
+    conda: "r_viz"
     resources: cpus="10", maxtime="2:00:00", mem_mb="60gb"
     params:
-        genome = config["genome"]
+        genome = config["genome"],
+        vis_script = config["vis_script"]
     shell:"""
     
+        #----- Run RScript to plot exploratory data analysis
+        mkdir -p plots
+        Rscript {params.vis_script} tRNA_counts/tRNA.readcounts.ann.tsv plots/
+
         #----- Make dummy file
         touch done.txt
     
@@ -340,6 +345,7 @@ rule genome_counts:
         layout = config["layout"],
         fc_strand = config["fc_strand"],
         genome_gtf = config["genome_gtf"],
+        smRNA_gtf = config["smRNA_gtf"],
         fc_ann_script = config["fc_ann_script"],
         genome_tpms = config["genome_tpm_script"]
     shell: """
@@ -349,7 +355,7 @@ rule genome_counts:
             -T 32 \
             -Q 10 \
             -s {params.fc_strand} \
-            -a {params.genome_gtf} \
+            -a {params.smRNA_gtf} \
             -o genome_counts/featurecounts.readcounts.raw.tsv \
             {input}
 
@@ -358,6 +364,28 @@ rule genome_counts:
             sed s/".mkdup.filt.bam"//g| tail -n +2 > genome_counts/featurecounts.readcounts.tsv
 
         #----- Run annotation script
-        python {params.fc_ann_script} {params.genome_gtf} genome_counts/featurecounts.readcounts.tsv > {output.genomeCounts}
+        python {params.fc_ann_script} {params.smRNA_gtf} genome_counts/featurecounts.readcounts.tsv > {output.genomeCounts}
     
     """
+
+##### 
+# Script: getcoverage.py and trnasequtils.py
+#getcoverage.testmain(
+            #samplefile = samplefile, # Input sample file with aligned reads
+            #bedfile = [trnainfo.maturetrnas], # BED file with mature tRNA regions
+            #locibed = [trnainfo.locifile], # BED file with tRNA loci (pre-tRNA regions)
+            #locistk = trnainfo.locialign, # Pre-aligned file for the tRNA loci
+            #bamdir = bamdir, # Directory containing BAM files
+            #lociedgemargin = 30, # Margin for the tRNA loci region
+            #sizefactors = expinfo.sizefactors, # Size factors for normalization
+            #orgtype = orgtype, # Organism type
+            #locicoverage = expinfo.locicoveragefile, # Output file for tRNA loci coverage
+            #stkfile = trnainfo.trnaalign, # Pre-aligned file for mature tRNAs
+            #numfile = trnainfo.trnanums, # File with tRNA numbering information
+            #locinums = trnainfo.locinums, # File with loci numbering information
+            #allcoverage = expinfo.trnacoveragefile, # Output file for overall tRNA coverage
+            #trnafasta = trnainfo.trnafasta, #FASTA file with tRNA sequences
+            #cores = cores, # NUmber of CPU cores for parallel processing (default = 8)
+            #uniqcoverage = expinfo.trnauniqcoveragefile,  # Output file for unique tRNA coverage
+            #mincoverage = mincoverage # Minimum coverage threshold for reporting
+            #)

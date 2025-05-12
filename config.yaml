@@ -40,6 +40,12 @@ countScript: "code/tRNA_counts.awk"
 tpm_normalization: "code/tRNA_readcount_to_tpm.py"
 fc_strand: "0"
 genome_gtf: "/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/human/ensembl-annotations/Homo_sapiens.GRCh38.97.gtf"
+smRNA_gtf: "/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases/hg38_db/genes.gtf"
 fc_ann_script: "code/add_gene_to_ensg.py"
 genome_tpm_script: "code/readcnt_to_rpkmtpm.py"
 featureCounts: "/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/misc/sullivan/tools/featurecounts/subread-2.0.1-Linux-x86_64/bin/featureCounts"
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# VISUALIZATION
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+vis_script: "code/CloverSeq_Exploratory_Utils.R"
