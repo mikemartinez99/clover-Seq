@@ -4,6 +4,7 @@ Pipeline for analyses of tRNA-derived small RNAs (tDRs), mature tRNAs, and infer
 # Table of Contents
 - [Introduction](#introduction)
 - [Databases](#databases)
+- [Development Notes](#development_notes)
 - [Summary](#summary)
 - [Directories](#directories)
 - [Files](#files)
@@ -21,4 +22,25 @@ References can be accessed at the following path on Discovery:
 
 `/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases`
 
+## Development Notes:
+-  Is mapping too stringent (20% of bases are modified in tRNA)
+AMino counts not informative
+Coverage plots are useful (normalized read count)
+Mutations: Linear modeling and bundance (this will always be pairwise) - miRNA-specific data for mining
+Estebans data are size selected (tRNA selecting anything under 200 nt in length (snRNAs, snoRNAs, tRNAs, miRNAs, fragments))
+CCA, CC, C endpoint tails : shows maturity (pretRNA is usually longer than the mature tRNA)
+tRNA modifications heatmap
+
+VOlcano plot for just tRNAs and then a separate one for all other small RNAs
+140 - 250 nts returned (120 of those are adapters)
+Also might be interested in mapping tRNA fragments
+
+Clean up microbes step....
+Might also be working in zebrafish
+
+#----- Jargon...
+Isodecoders - isoforms of tRNAs (gtRNAdb) --RSEM????? -> as long as you have a gtf
+Isoacceptros - grouping by family (codon rdegeneracy)
+
+Seed length too long
 

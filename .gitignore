@@ -4,4 +4,7 @@ data/
 trimming/
 alignment/
 unaligned/
+genome_alignment/
+genome_filtered/
+genome_counts/
 code/MM_Working_Scripts/
