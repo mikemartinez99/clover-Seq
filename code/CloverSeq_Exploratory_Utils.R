@@ -94,7 +94,7 @@ relAbund <- ggplot2::ggplot(trnaRelAbund, aes(x = Isoacceptor, y = relative_abun
   theme(axis.title = element_text(size = 18, face = "bold"),
         axis.text.y = element_text(size = 16),
         axis.text.x = element_text(size = 16, angle = 40, hjust = 1))
-ggplot2::ggsave(relAbund, file = paste0(outputDir, "tRNA_relAbund_by_sample.png"), width = 12, height = 10)
+ggplot2::ggsave(relAbund, file = paste0(outputDir, "tRNA_relAbund_by_sample.png"), width = 10, height = 8)
 
 #----- Plot absolute abundance barplot
 absAbund <- ggplot2::ggplot(trnaAbAbund, aes(x = Isoacceptor, y = absolute_abundance, fill = Sample)) +
@@ -107,12 +107,12 @@ absAbund <- ggplot2::ggplot(trnaAbAbund, aes(x = Isoacceptor, y = absolute_abund
   theme(axis.title = element_text(size = 18, face = "bold"),
         axis.text.y = element_text(size = 16),
         axis.text.x = element_text(size = 16, angle = 40, hjust = 1))
-ggplot2::ggsave(absAbund, file = paste0(outputDir, "tRNA_absAbund_by_sample.png"), width = 12, height = 10)
+ggplot2::ggsave(absAbund, file = paste0(outputDir, "tRNA_absAbund_by_sample.png"), width = 10, height = 8)
 
 
 #----- Combine the plots
 bySample <- cowplot::plot_grid(absAbund, relAbund, ncol = 1)
-ggplot2::ggsave(bySample, file = paste0(outputDir, "tRNA_abundance_summary_by_sample.png"), width = 12, height = 10)
+ggplot2::ggsave(bySample, file = paste0(outputDir, "tRNA_abundance_summary_by_sample.png"), width = 10, height = 8)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -154,7 +154,7 @@ relAbundISO <- ggplot2::ggplot(sampleRelAbund, aes(x = Sample, y = relative_abun
   theme(axis.title = element_text(size = 18, face = "bold"),
         axis.text.y = element_text(size = 16),
         axis.text.x = element_text(size = 16, angle = 40, hjust = 1))
-ggplot2::ggsave(relAbundISO, file = paste0(outputDir, "tRNA_relAbund_by_isoacceptor.png"), width = 12, height = 10)
+ggplot2::ggsave(relAbundISO, file = paste0(outputDir, "tRNA_relAbund_by_isoacceptor.png"), width = 10, height = 8)
 
 
 #----- Plot absolute abundance barplot
@@ -168,12 +168,12 @@ absAbundISO <- ggplot2::ggplot(sampleAbAbund, aes(x = Sample, y = absolute_abund
   theme(axis.title = element_text(size = 18, face = "bold"),
         axis.text.y = element_text(size = 16),
         axis.text.x = element_text(size = 16, angle = 40, hjust = 1))
-ggplot2::ggsave(absAbundISO, file = paste0(outputDir, "tRNA_absAbund_by_isoacceptor.png"), width = 12, height = 10)
+ggplot2::ggsave(absAbundISO, file = paste0(outputDir, "tRNA_absAbund_by_isoacceptor.png"), width = 10, height = 8)
 
 
 #----- Combine the plots
 byIsoAcc <- cowplot::plot_grid(absAbundISO, relAbundISO, ncol = 1)
-ggplot2::ggsave(byIsoAcc, file = paste0(outputDir, "tRNA_abundance_summary_by_isoacceptor.png"), width = 12, height = 10)
+ggplot2::ggsave(byIsoAcc, file = paste0(outputDir, "tRNA_abundance_summary_by_isoacceptor.png"), width = 10, height = 8)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -248,7 +248,7 @@ PCAplot <- ggplot2::ggplot(loadings, aes(x = PC1, y = PC2, color = Sample, label
   theme(axis.text = element_text(size = 14, face = "bold"),
         axis.title = element_text(size = 16, face = "bold"),
         legend.position = "none")
-ggplot2::ggsave(PCAplot, file = paste0(outputDir, "PCA_Plot.png"), width = 8, height = 8)
+ggplot2::ggsave(PCAplot, file = paste0(outputDir, "PCA_Plot.png"), width = 6, height = 6)
 
 
 

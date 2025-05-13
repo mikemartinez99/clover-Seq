@@ -42,13 +42,13 @@ rule all:
         expand("trimming/logs/{sample}.cutadapt.report", sample = sample_list),
 
         #----- Rule tRNA_alignment outputs
-        expand("alignment/{sample}.alignment.log.txt", sample = sample_list),
-        expand("alignment/{sample}.srt.bam", sample = sample_list),
-        expand("unaligned/{sample}.unalign.fastq", sample = sample_list),
+        expand("tRNA_alignment/{sample}.alignment.log.txt", sample = sample_list),
+        expand("tRNA_alignment/{sample}.srt.bam", sample = sample_list),
+        expand("tRNA_unaligned/{sample}.unalign.fastq", sample = sample_list),
 
         #----- Rule tRNA_mark_duplicates outputs
-        expand("alignment/{sample}.mkdup.bam", sample = sample_list),
-        expand("alignment/{sample}.mkdup.log.txt", sample = sample_list),
+        expand("tRNA_alignment/{sample}.mkdup.bam", sample = sample_list),
+        expand("tRNA_alignment/{sample}.mkdup.log.txt", sample = sample_list),
 
         #----- Rule tRNA_map_stats outputs
         expand("tRNA_alignment_stats/{sample}.mkdup.bam.idxstats", sample = sample_list),
@@ -72,9 +72,12 @@ rule all:
 
         #----- Rule to count genome counts
         "genome_counts/featurecounts.readcounts.ann.tsv", 
+
+        #----- Rule exploratory_data_analysis outputs
+        "plots/PCA_Plot.png"
         
     output:
-        "done.txt"
+        "QC/tRNA_multiqc_report.html"
     conda: "r_viz"
     resources: cpus="10", maxtime="2:00:00", mem_mb="60gb"
     params:
@@ -82,12 +85,14 @@ rule all:
         vis_script = config["vis_script"]
     shell:"""
     
-        #----- Run RScript to plot exploratory data analysis
-        mkdir -p plots
-        Rscript {params.vis_script} tRNA_counts/tRNA.readcounts.ann.tsv plots/
-
-        #----- Make dummy file
-        touch done.txt
+        #----- Run MultiQC Report
+        multiqc \
+            trimming/logs \
+            tRNA_alignment \
+            tRNA_alignment_stats \
+            tRNA_counts \
+            -n QC/tRNA_multiqc_report.html \
+            -c multiqc_config.yaml
     
     """
 
@@ -120,9 +125,9 @@ rule tRNA_align:
         trim_1 = "trimming/{sample}.R1.trim.fastq.gz",
     output:
         #sam = "alignment/{sample}.aln.sam",
-        alignLog = "alignment/{sample}.alignment.log.txt",
-        unalign = "unaligned/{sample}.unalign.fastq",
-        srtBam = "alignment/{sample}.srt.bam"
+        alignLog = "tRNA_alignment/{sample}.alignment.log.txt",
+        unalign = "tRNA_unaligned/{sample}.unalign.fastq",
+        srtBam = "tRNA_alignment/{sample}.srt.bam"
     conda: "trax_env"
     resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
     params:
@@ -144,33 +149,33 @@ rule tRNA_align:
             --ignore-qual \
             --un {output.unalign} \
             -p {resources.cpus} \
-            -S alignment/{params.sample}.aln.sam 2> {output.alignLog}
+            -S tRNA_alignment/{params.sample}.aln.sam 2> {output.alignLog}
 
         #----- subset reads for aligned length > 15 & < 90bp & any reads with gaps (XO/XG tags)
-        samtools view -h alignment/{params.sample}.aln.sam | \
+        samtools view -h tRNA_alignment/{params.sample}.aln.sam | \
             awk 'BEGIN {{OFS="\t"}} $1 ~ /^@/ || ((length($10) > 15 && length($10) <= 90) && ($0 !~ /XG:i:[^0]/ && $0 !~ /XO:i:[^0]/)) {{print $0}}' | \
-            samtools view -Sb - > alignment/{params.sample}.bam
+            samtools view -Sb - > tRNA_alignment/{params.sample}.bam
 
         #----- filter for any reads with MAPQ <=1
-        samtools view -h -q 2 alignment/{params.sample}.bam > alignment/{params.sample}.sub.bam
+        samtools view -h -q 2 tRNA_alignment/{params.sample}.bam > tRNA_alignment/{params.sample}.sub.bam
 
         #----- Sort and filter the bam file
-        samtools sort -@ 4 alignment/{params.sample}.sub.bam > {output.srtBam}
+        samtools sort -@ 4 tRNA_alignment/{params.sample}.sub.bam > {output.srtBam}
         samtools index {output.srtBam}
 
         #----- Remove temp files
-        rm -rf alignment/{params.sample}.aln.sam
-        rm -rf alignment/{params.sample}.bam
-        rm -rf alignment/{params.sample}.sub.bam
+        rm -rf tRNA_alignment/{params.sample}.aln.sam
+        rm -rf tRNA_alignment/{params.sample}.bam
+        rm -rf tRNA_alignment/{params.sample}.sub.bam
     """
 
 #----- Rule to mark duplicates
 rule tRNA_mark_duplicates:
     input:
-        bam = "alignment/{sample}.srt.bam"
+        bam = "tRNA_alignment/{sample}.srt.bam"
     output:
-        mkdup = "alignment/{sample}.mkdup.bam",
-        mkdupLog = "alignment/{sample}.mkdup.log.txt"
+        mkdup = "tRNA_alignment/{sample}.mkdup.bam",
+        mkdupLog = "tRNA_alignment/{sample}.mkdup.log.txt"
     conda: "rnaseq1"
     resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
     params:
@@ -196,7 +201,7 @@ rule tRNA_mark_duplicates:
 #----- Rule to collate tRNA mapping statistics
 rule tRNA_map_stats:
     input:
-        mkdup = "alignment/{sample}.mkdup.bam"
+        mkdup = "tRNA_alignment/{sample}.mkdup.bam"
     output:
         idxStats = "tRNA_alignment_stats/{sample}.mkdup.bam.idxstats",
         flagStats = "tRNA_alignment_stats/{sample}.mkdup.bam.flagstat"
@@ -245,7 +250,7 @@ rule tRNA_count:
 #----- Rule to align unmapped reads to host genome
 rule genome_align:
     input:
-        unalign = "unaligned/{sample}.unalign.fastq",
+        unalign = "tRNA_unaligned/{sample}.unalign.fastq",
     output:
         genomeAlign = "genome_alignment/{sample}.srt.bam"
     conda: "trax_env"
@@ -365,6 +370,25 @@ rule genome_counts:
 
         #----- Run annotation script
         python {params.fc_ann_script} {params.smRNA_gtf} genome_counts/featurecounts.readcounts.tsv > {output.genomeCounts}
+    
+    """
+
+#----- Rule to output QC plots
+rule exploratory_analysis:
+    input:
+        "tRNA_counts/tRNA.readcounts.ann.tsv"
+    output:
+        "plots/PCA_Plot.png"
+    conda: "r_viz"
+    resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
+    params:
+        vis_script = config["vis_script"]
+    shell: """
+    
+        #----- Plot (Arg1 = tRNA annotated counts, Arg2 = output dir)
+        Rscript {params.vis_script} \
+            {input} \
+            plots/
     
     """
 
