@@ -635,13 +635,12 @@ def testmain(**argdict):
     else:
         mincoverage = int(argdict["mincoverage"])  
     
-    #if "bamdir" not in argdict:
-    #    bamdir = "./"
-    #bamdir = argdict["bamdir"]
-    #sampledata = samplefile(argdict["samplefile"], bamdir = bamdir)
-    bamdir = "tRNA_alignment/"
+    if "bamdir" not in argdict:
+        bamdir = "./"
+    bamdir = argdict["bamdir"]
+    sampledata = samplefile(argdict["samplefile"], bamdir = bamdir)
     trnafasta = argdict["trnafasta"]
-    #sampledata = samplefile(argdict["samplefile"], bamdir=argdict["bamdir"])
+    
     trnaseqs = fastadict(trnafasta)
     for currname in trnaseqs.keys():
         trnaseqs[currname] = ("N"*edgemargin)+trnaseqs[currname]+("N"*edgemargin)
@@ -678,7 +677,7 @@ def testmain(**argdict):
     combinereps = argdict["combinereps"]
     allcoveragefile = None
     if "allcoverage" not in argdict or argdict["allcoverage"] == "stdout":
-        allcoveragefile = sys.stdout
+        allcoveragefile = open("all_coverage.txt", "w")
     else:
         allcoveragefile = open(argdict["allcoverage"],"w")
     samples = sampledata.getsamples()
@@ -1002,7 +1001,14 @@ if __name__ == "__main__":
                        help='Name for files showing unique and non-unique genome reads')
     parser.add_argument('--maxmismatches', default=None,
                        help='Set maximum number of allowable mismatches')
-    
+    parser.add_argument('--allcoverage', default='stdout',
+                        help='Path to output all coverage file')
+    parser.add_argument('--trnafasta',
+                        help='Path to trna fasta')
+    parser.add_argument('--locistk',
+                        help='Path to trna fasta')
+
+
     '''
     parser.add_argument('--trnapositions', action="store_true", default=False,
                        help='Use tRNA positions')

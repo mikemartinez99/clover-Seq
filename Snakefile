@@ -1,7 +1,8 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# GDSC-tRAX v2 Pipeline (Claude Version)
+# clover-Seq pipeline for analysis of tRNAs
 # 
 # Authors: Mike Martinez
+# Lab: GDSC
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 #----- TO DO
@@ -153,7 +154,7 @@ rule tRNA_align:
 
         #----- subset reads for aligned length > 15 & < 90bp & any reads with gaps (XO/XG tags)
         samtools view -h tRNA_alignment/{params.sample}.aln.sam | \
-            awk 'BEGIN {{OFS="\t"}} $1 ~ /^@/ || ((length($10) > 15 && length($10) <= 90) && ($0 !~ /XG:i:[^0]/ && $0 !~ /XO:i:[^0]/)) {{print $0}}' | \
+            awk 'BEGIN {{OFS="\t"}} $1 ~ /^@/ || ((length($10) > 15 && length($10) <= 90))' | \
             samtools view -Sb - > tRNA_alignment/{params.sample}.bam
 
         #----- filter for any reads with MAPQ <=1
