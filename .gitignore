@@ -16,4 +16,7 @@ code/MM_Working_Scripts/
 code/test/
 QC/
 plots/
+code/*.pyc
+code/*.pdf
+code/*.txt
 
