@@ -42,23 +42,25 @@ if (!dir.exists(outputDir)) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 trna <- read.csv(input_tsv, sep = "\t")
 
+
 #----- Remove final row of the data
-trna <- trna[-437,]
-trna$Length <- NULL
+trna <- trna[trna$tRNA_ID != "*",]
+trnas <- subset(trna, grepl("^tRNA|^tRX", trna$tRNA_ID))
+trnas$Length <- NULL
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # GROUPED BY ISOACCEPTOR
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 #----- Calculate relative abundance
-trnaRelAbund <- trna %>%
+trnaRelAbund <- trnas %>%
   tidyr::pivot_longer(-c(tRNA_ID, Isoacceptor), names_to = "Sample", values_to = "count") %>%
   dplyr::group_by(Isoacceptor) %>%
   dplyr::mutate(relative_abundance = count / sum(count)) %>%
   dplyr::ungroup()
 
 #----- Calculate absolute abundance
-trnaAbAbund <- trna %>%
+trnaAbAbund <- trnas %>%
   tidyr::pivot_longer(-c(tRNA_ID, Isoacceptor), names_to = "Sample", values_to = "count") %>%
   dplyr::group_by(Isoacceptor) %>%
   dplyr::mutate(absolute_abundance = sum(count)) %>%
@@ -120,13 +122,13 @@ ggplot2::ggsave(bySample, file = paste0(outputDir, "tRNA_abundance_summary_by_sa
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 #----- Calculate relative abundance
-sampleRelAbund <- trna %>%
+sampleRelAbund <- trnas %>%
   tidyr::pivot_longer(-c(tRNA_ID, Isoacceptor), names_to = "Sample", values_to = "count") %>%
   dplyr::group_by(Sample) %>%
   dplyr::mutate(relative_abundance = count / sum(count)) %>%
   dplyr::ungroup()
 
-sampleAbAbund <- trna %>%
+sampleAbAbund <- trnas %>%
   tidyr::pivot_longer(-c(tRNA_ID, Isoacceptor), names_to = "Sample", values_to = "count") %>%
   dplyr::group_by(Sample) %>%
   dplyr::mutate(absolute_abundance = sum(count)) %>%
@@ -181,10 +183,25 @@ ggplot2::ggsave(byIsoAcc, file = paste0(outputDir, "tRNA_abundance_summary_by_is
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 #----- Prepare the data
-trna_eda <- trna
+trna_eda <- trnas
 trna_eda$Isoacceptor <- NULL
 rownames(trna_eda) <- trna_eda$tRNA_ID
 trna_eda$tRNA_ID <- NULL
+
+#----- Step 1: Calculate geometric mean for each gene
+geo_mean <- function(x) {
+  exp(mean(log(x[x > 0]), na.rm = TRUE))
+}
+geomeans <- apply(trna_eda, 1, geo_mean)
+
+#----- Calculate size factors
+size_factors <- apply(trna_eda, 2, function(col) {
+  ratios <- col / geomeans
+  median(ratios, na.rm = TRUE)  # Median of ratios
+})
+
+#----- Calculate normalized counts
+norm_counts <- sweep(trna_eda, 2, size_factors, "/")
 
 #----- Explore variance
 variance <- apply(trna_eda, 1, var)
@@ -231,7 +248,7 @@ generatePCs <- function(MAT, VARS, NFEATURES) {
 }
 
 #----- Calculate PCs and extract loadings
-PCs <- generatePCs(trna_eda, variance, 100)
+PCs <- generatePCs(norm_counts, variance, 100)
 loadings <- PCs[[1]]
 loadings$Sample <- rownames(loadings)
 
@@ -250,5 +267,5 @@ PCAplot <- ggplot2::ggplot(loadings, aes(x = PC1, y = PC2, color = Sample, label
         legend.position = "none")
 ggplot2::ggsave(PCAplot, file = paste0(outputDir, "PCA_Plot.png"), width = 6, height = 6)
 
-
+### Add some code to get size factors and normalized counts...
 
