@@ -1,21 +1,25 @@
-# clover-Seq
-Snakemake workflow for the analyses of mature tRNAs and other smRNAs from high-throughput sequencing
+# Clover-Seq Pipeline Documentation
+Snakemake workflow for the comprehensive analyses of mature tRNAs and other small RNAs (smRNAs) from high-throughput sequencing data. 
 
 
-<img src="img/CloverSeq_Logo.png" alt="Description" width="300" height="300"/>
+<div style="display: flex; justify-content: center; gap: 20px;">
+    <img src="img/CloverSeq_Logo.png" alt="CloverSeq Logo" width="400" height="300" style="border: none;">
+    <img src="img/cqb_logo.png" alt="Another Image" width="400" height="300" style="border: none;">
+</div>
+
 
 # Table of Contents
-- [Development To Do](#development_to_do)
+- [Development To Do](#development-to-do)
 - [Introduction](#introduction)
 - [Databases](#databases)
-- [Database Build Implementation](#database_build_implementation)
-- [Development Notes](#development_notes)
-- [Pipeline Summary](#pipeline_summary)
-- [Directories](#directories)
+- [Database Build Implementation](#database-build-implementation)
+- [Pipeline Summary](#pipeline-summary)
+- [Preprocessing Implementation](#preprocessing-implementation)
+- [Differential Expression Implementation](#differential-expression-implementation)
 - [Files](#files)
-- [Implementation](#implementation)
+- [Development Notes](#development-notes)
 - [Contact](#contact)
-- [Citation and Licensing](#citation_and_licensing)
+- [Citation and Licensing](#citation-and-licensing)
 
 
 ## Development To Do
@@ -78,7 +82,14 @@ Clover-Seq is adapted from the [tRAX Pipeline](https://github.com/UCSC-LoweLab/t
 |`tRNA_count`|Count tRNA reads|`rnaseq1`|
 |`count_smRNAs`|Count tRNA + smRNAs|`tRAX_env`|
 
+## Preprocessing Implementation
+Add implementation and rule graph here once finished...
 
+## Differential Expression Implementation
+Add implementation and rule graph here once finished...
+
+## Files
+Add file content here...
 
 ## Development Notes:
 
@@ -97,6 +108,9 @@ To run countreadtypes.py from the command line
 ```shell
 python count_all_smRNA.py --samplefile=MM_Working_Scripts/sample_file.txt --trnatable=/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases/hg38_db/db-trnatable.txt --ensemblgtf=/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases/hg38_db/genes.gtf --trnaloci=/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases/hg38_db/db-trnaloci.bed --maturetrnas=/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases/hg38_db/db-maturetRNAs.bed --trnaaminofile=trna_amino_counts.txt --readlengthfile=read_lengths.txt --realcountfile=real_counts.txt --countfile=counts.txt
 ```
+
+## Contact
+Please address questions to **DataAnalyticsCore@groups.dartmouth.edu** or submit an issue in the GitHub repository.
 
 ## Citation and Licensing
 
