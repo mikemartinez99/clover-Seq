@@ -11,6 +11,7 @@ Snakemake workflow for the comprehensive analyses of mature tRNAs and other smal
 # Table of Contents
 - [Development To Do](#development-to-do)
 - [Introduction](#introduction)
+- [Installation](#installation)
 - [Databases](#databases)
 - [Database Build Implementation](#database-build-implementation)
 - [Pipeline Summary](#pipeline-summary)
@@ -46,10 +47,27 @@ python make_all_feature_bed.py \
 
 - Add database building workflow implementation to README
 
+- Add conda environment definitions in env_config folder (rename tRAX_env to clover-seq)
+    - Need a conda that is similar to `rnaseq1` -- rename, or can we host for the public?
+
 ## Introduction
 This pipeline supports the analysis of mature-tRNAs and other small RNAs (smRNAs) for human (hg38), mouse (mm10), and fly(dm6) genomes. While typical RNA-Seq preprocessing strategies are employed in this pipeline, special considerations to handle tRNA biology are included. Custom reference databases encompass the full host genome along with mature tRNA transcripts with the addition of 3' CCA tails not encoded genomically. 
 
 Following preprocessing workflow, differential expression can be performed using the differential expression workflow included in this repo (FUTURE)
+
+## Installation
+To install this code, clone the github repository
+
+```shell
+git clone https://github.com/mikemartinez99/clover-Seq
+
+```
+
+Several [conda environments](https://anaconda.org/anaconda/conda) are required to run this code successfully and can be built using the associated yaml file in the [env_config folder](https://github.com/mikemartinez99/clover-Seq/tree/main/env_config) using the following command:
+
+```shell
+conda env create -f name.yaml
+```
 
 
 ## Databases
@@ -114,13 +132,11 @@ Please address questions to **DataAnalyticsCore@groups.dartmouth.edu** or submit
 
 ## Citation and Licensing
 
-**This codebase is adapted from the original tRAX tool, licensed under GPL v3.0.** 
+**This codebase is adapted from the original tRAX tool, licensed under GPL v3.0., modified by Mike Martinez, Dartmouth Genomic Data Science Core** 
 
-**Holmes AD, Howard JM, Chan PP, and Lowe TM.** tRNA Analysis of eXpression (tRAX): A tool for integrating analysis of tRNAs, tRNA-derived small RNAs, and tRNA modifications. 2020. (submitted)
+**Citation:** [Holmes AD, Howard JM, Chan PP, and Lowe TM.](https://www.biorxiv.org/content/10.1101/2022.07.02.498565v1)
 
-Modifications were made by Mike Martinez (Dartmouth Genomic Data Science Core)
-
-This pipeline is licensed under GNU General Public License
+**This pipeline was created with funds from the COBRE grant 1P20GM130454. If you use the pipeline in your own work, please acknowledge the pipeline by citing the grant number in your manuscript.**
 
 
 
