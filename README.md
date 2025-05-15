@@ -1,4 +1,7 @@
 # Clover-Seq Pipeline Documentation
+![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)
+![Snakemake](https://img.shields.io/badge/Snakemake-v7.18.0-red?logo=snakemake&logoColor=white)
+
 Snakemake workflow for the comprehensive analyses of mature tRNAs and other small RNAs (smRNAs) from high-throughput sequencing data. 
 
 
