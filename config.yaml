@@ -5,6 +5,7 @@
 # GENERAL SETTINGS
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 sample_txt: runfile.txt
+groupFile: "code/MM_Working_Scripts/sample_file.txt"
 layout: "single"
 genome: "hg38"
 

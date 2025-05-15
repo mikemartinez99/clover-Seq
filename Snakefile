@@ -64,6 +64,12 @@ rule all:
         #----- Rule read_length_distribution outputs
         "tRNA_alignment/read_length_distribution.txt",
 
+        #----- Rule count_smRNAs outputs
+        "smRNA_counts/raw_amino_counts_by_group.txt",
+        "smRNA_counts/read_length_distribution.txt",
+        "smRNA_counts/smRNA_raw_counts_by_group.txt",
+        "smRNA_counts/smRNA_raw_counts_by_sample.txt",
+
         #----- Rule exploratory_data_analysis outputs
         "plots/PCA_Plot.png",
         "plots/read_length_distribution_by_sample.png"
@@ -272,7 +278,37 @@ rule read_length_distribution:
         done
     """
 
+#----- Rule to count other smRNAs
+rule count_smRNAs:
+    input: 
+        expand("tRNA_alignment/{sample}.mkdup.bam", sample = sample_list),
+    output:
+        aminoCounts = "smRNA_counts/raw_amino_counts_by_group.txt",
+        readLengths = "smRNA_counts/read_length_distribution.txt",
+        groupCounts = "smRNA_counts/smRNA_raw_counts_by_group.txt",
+        counts = "smRNA_counts/smRNA_raw_counts_by_sample.txt"
+    conda: "trax_env"
+    resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
+    params:
+        smRNA_count = "code/count_all_smRNA.py",
+        sampleFile = config["groupFile"],
+        trna_db = config["trna_db"]
 
+    shell: """
+    
+        #----- Run the code to count all tRNA + smRNA
+        python {params.smRNA_count} \
+            --samplefile={params.sampleFile} \
+            --trnatable={params.trna_db}/db-trnatable.txt \
+            --ensemblgtf={params.trna_db}/genes.gtf \
+            --trnaloci={params.trna_db}/db-trnaloci.bed \
+            --maturetrnas={params.trna_db}/db-maturetRNAs.bed \
+            --trnaaminofile={output.aminoCounts} \
+            --readlengthfile={output.readLengths} \
+            --realcountfile={output.counts} \
+            --countfile={output.groupCounts}
+    
+    """
 
 #----- Rule to output QC plots
 rule exploratory_analysis:
