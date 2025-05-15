@@ -423,6 +423,10 @@ def printtrnacountfile(trnacountfilename,samples,  samplecounts, trnalist, trnal
     trnacountfile.close()
 trnaends = list(["CCA","CC","C",""])    
 def printtrnaendfile(trnaendfilename,samples,  samplecounts, trnalist, trnaloci , minreads = 5):
+    if trnaendfilename is None:
+        # No output, just return
+        return
+    
     trnaendfile = open(trnaendfilename, "w")
     print >>trnaendfile, "end\t"+"\t".join(currsample for currsample in samples)
 
@@ -466,7 +470,6 @@ def testmain(**argdict):
     threadmode = True
     if cores == 1:
         threadmode = False
-    otherseqs = extraseqfile(argdict["otherseqs"])
     typefile = None
     
     if "bamdir" not in argdict:
@@ -507,7 +510,6 @@ def testmain(**argdict):
     fullpretrnathreshold = 2
     otherseqdict = dict()
     #Grabbing all the features to count
-    #print >>sys.stderr, otherseqs
     try:
         featurelist = dict()
         trnaloci = list()
@@ -526,8 +528,6 @@ def testmain(**argdict):
             embllist = list(readgtf(ensemblgtf, filterpsuedo = removepseudo))
         else:
             embllist = list()
-        for name, currfile in otherseqs.getseqbeds().iteritems():
-            otherseqdict[name] = list(readbed(currfile))
 
     except IOError as e:
         print >>sys.stderr, e
@@ -947,6 +947,10 @@ if __name__ == "__main__":
                        help='do not count multiply mapped reads')
     parser.add_argument('--maxmismatches', default=None,
                        help='Set maximum number of allowable mismatches')
+    parser.add_argument('--trnaends', default="tRNA_ends.txt",
+                       help='Set maximum number of allowable mismatches')
+    parser.add_argument('--trnauniquecounts', default = "unique_tRNA_counts.txt",
+                        help = "Unique tRNA counts")
     
     
     args = parser.parse_args()
