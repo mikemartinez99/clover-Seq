@@ -1,6 +1,8 @@
 # clover-Seq
 Pipeline for analyses of tRNA-derived small RNAs (tDRs), mature tRNAs, and inference of RNA modification from high-throughput sequencing. 
 
+<img src="img/CloverSeq_Logo.png" alt="Description" width="300" height="300"/>
+
 # Table of Contents
 - [Introduction](#introduction)
 - [Databases](#databases)
