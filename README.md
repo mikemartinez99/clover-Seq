@@ -2,10 +2,7 @@
 Snakemake workflow for the comprehensive analyses of mature tRNAs and other small RNAs (smRNAs) from high-throughput sequencing data. 
 
 
-<div style="display: flex; justify-content: center; gap: 20px;">
-    <img src="img/CloverSeq_Logo.png" alt="CloverSeq Logo" width="400" height="300" style="border: none;">
-    <img src="img/cqb_logo.png" alt="Another Image" width="400" height="300" style="border: none;">
-</div>
+<img src="img/CloverSeq_CQB_logo.png" alt="Description" width="700" height="450" style="border: none;" />
 
 
 # Table of Contents
