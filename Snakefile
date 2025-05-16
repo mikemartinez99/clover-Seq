@@ -56,13 +56,13 @@ rule all:
         expand("tRNA_alignment_stats/{sample}.mkdup.bam.flagstat", sample = sample_list),
 
         #----- Rule tRNA_count outputs
-        "tRNA_counts/tRNA.readcounts.tsv", 
-        "tRNA_counts/tRNA.readcounts_tpm.tsv", 
-        "tRNA_counts/tRNA.readcounts.ann.tsv", 
-        "tRNA_counts/tRNA.readcounts_tpm.ann.tsv", 
+        "tRNA_counts/genetype_counts.txt",
+        "tRNA_counts/tRNA_isotype_counts.txt",
+        "tRNA_counts/gene_level_counts_detailed.txt",
+        "tRNA_counts/gene_level_counts_collapsed.txt",
 
         #----- Rule read_length_distribution outputs
-        "tRNA_alignment/read_length_distribution.txt",
+        "tRNA_alignment/full_alignment_read_length_distribution.txt",
 
         #----- Rule count_smRNAs outputs
         "smRNA_counts/raw_amino_counts_by_group.txt",
@@ -72,7 +72,7 @@ rule all:
 
         #----- Rule exploratory_data_analysis outputs
         "plots/PCA_Plot.png",
-        "plots/read_length_distribution_by_sample.png"
+        "plots/read_length_distribution_by_sample.png",
         
     output:
         "QC/tRNA_multiqc_report.html"
@@ -220,37 +220,64 @@ rule tRNA_count:
     input:
         expand("tRNA_alignment_stats/{sample}.mkdup.bam.idxstats", sample = sample_list)
     output:
-        tRNA_counts = "tRNA_counts/tRNA.readcounts.tsv",
-        tRNA_tpms = "tRNA_counts/tRNA.readcounts_tpm.tsv",
-        isoAcc_anno = "tRNA_counts/tRNA.readcounts.ann.tsv",
-        isoAcc_tpms_anno = "tRNA_counts/tRNA.readcounts_tpm.ann.tsv"
-    conda: "rnaseq1"
+        genetypeFile = "tRNA_counts/genetype_counts.txt",
+        tRNA_isotype_counts = "tRNA_counts/tRNA_isotype_counts.txt",
+        trnaCountsDetailed = "tRNA_counts/gene_level_counts_detailed.txt",
+        trnaCountsCollapsed = "tRNA_counts/gene_level_counts_collapsed.txt"
+    conda: "trax_env"
     resources: cpus="10", maxtime="2:00:00", mem_mb="60gb",
     params:
-        countScript = config["countScript"],
-        tpm_normalization = config["tpm_normalization"]
+        countScript = "code/countreads.py",
+        sampleFile = config["groupFile"],
+        trna_db = config["trna_db"]
     shell: """
     
-        #----- Count tRNAs
-        echo -ne tRNA_ID"\t"Length"\t" > {output.tRNA_counts} 
-        echo {input} | tr " " "\t"| sed s/"tRNA_alignment_stats\/"//g| sed s/".mkdup.bam.idxstats"//g >> {output.tRNA_counts}
-        paste {input}| awk -f {params.countScript} >> {output.tRNA_counts}
+        #----- Run the countreads.py script
+        python {params.countScript} \
+            --samplefile={params.sampleFile} \
+            --ensemblgtf={params.trna_db}/genes.gtf \
+            --trnaloci={params.trna_db}/db-trnaloci.bed \
+            --maturetrnas={params.trna_db}/db-maturetRNAs.bed \
+            --trnatable={params.trna_db}/db-trnatable.txt \
+            --genetypefile={output.genetypeFile} \
+            --trnacounts={output.tRNA_isotype_counts} > {output.trnaCountsDetailed}
 
-        #----- Run TPM normalization
-        python {params.tpm_normalization} {output.tRNA_counts}
-
-        #----- Add isoacceptor information
-        awk 'BEGIN {{OFS="\t"}} NR==1 {{print $0, "Isoacceptor"; next}} {{split($1, a, "-"); print $0, a[2]}}' {output.tRNA_counts} > {output.isoAcc_anno}
-        awk 'BEGIN {{OFS="\t"}} NR==1 {{print $0, "Isoacceptor"; next}} {{split($1, a, "-"); print $0, a[2]}}' {output.tRNA_tpms} > {output.isoAcc_tpms_anno}
-
+        #----- Collapse the detailed tRNA counts to overall tRNA counts
+        awk '
+        NR==1 {{ 
+            print; 
+            next 
+        }}
+        {{
+            split($1, arr, "_");
+            base = arr[1];
+            if (!(base in seen)) {{
+                order[++count] = base;
+                seen[base] = 1;
+            }}
+            for (i=2; i<=NF; i++) {{
+                counts[base, i] += $i;
+            }}
+        }}
+        END {{
+            for (i=1; i<=count; i++) {{
+                tRNA = order[i];
+                printf "%s", tRNA;
+                for (j=2; j<=NF; j++) {{
+                    printf "\t%d", counts[tRNA,j] + 0;
+                }}
+                print "";
+            }}
+        }}
+        ' {output.trnaCountsDetailed} > {output.trnaCountsCollapsed}   
     """
 
-#----- Rule to plot read-length distributions
+#----- Rule to plot read-length distributions for ALL reads (not just tRNAs)
 rule read_length_distribution:
     input:
         expand("tRNA_alignment/{sample}.mkdup.bam", sample = sample_list)
     output:
-        distribution = "tRNA_alignment/read_length_distribution.txt"
+        distribution = "tRNA_alignment/full_alignment_read_length_distribution.txt"
     conda: "trax_env"
     resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
     params:
