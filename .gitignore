@@ -21,5 +21,7 @@ code/*.pyc
 code/*.pdf
 code/*.txt
 code/__pycache__/*
+normalized/
+PCA/
 
 
