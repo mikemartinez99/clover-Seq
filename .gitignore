@@ -9,6 +9,7 @@ tRNA_unaligned/
 tRNA_alignment_stats/
 tRNA_counts/
 tRNA_index/
+smRNA_counts
 genome_alignment/
 genome_filtered/
 genome_counts/
@@ -19,4 +20,5 @@ plots/
 code/*.pyc
 code/*.pdf
 code/*.txt
+
 

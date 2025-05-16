@@ -1,0 +1,1 @@
+Feature	Sample	position	coverage	readstarts	readends	uniquecoverage	multitrnacoverage	multianticodoncoverage	multiaminocoverage	tRNAreadstotal	actualbase	mismatchedbases	deletedbases	adenines	thymines	cytosines	guanines	deletions

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import re
 import random
@@ -61,7 +61,7 @@ def getuniquetRNAs(trnalist):
     scoredict = defaultdict(set)
     for curr in trnalist:
         sequencedict[curr.seq].append(curr)
-    for currtrans in sequencedict.iterkeys():
+    for currtrans in sequencedict.keys():
         scores = set(curr.score for curr in sequencedict[currtrans])
         anticodon = set(curr.anticodon for curr in sequencedict[currtrans])
         amino = set(curr.amino for curr in sequencedict[currtrans])
@@ -77,7 +77,7 @@ def getuniquetRNAs(trnalist):
             #print >>sys.stderr, "Multiple scores"
             pass
         if len(anticodon) > 1:
-            print >>sys.stderr, "tRNA file contains identical tRNAs with seperate anticodons, cannot continue"
+            print("tRNA file contains identical tRNAs with seperate anticodons, cannot continue", file=sys.stderr)
             sys.exit()
         yield tRNAtranscript(currtrans, scores,list(amino)[0],list(anticodon)[0],loci, introns)
         
@@ -153,13 +153,13 @@ def readrnacentral(scanfile,chromnames, mode = 'locus'):
             if mode == 'locus':
                 yield currlocus
         allseqs = dict()
-    print >>sys.stderr, len(transcriptinfo.keys())
-    for currtrans in transcriptinfo.iterkeys():
+    print(len(list(transcriptinfo.keys())), file=sys.stderr)
+    for currtrans in transcriptinfo.keys():
         if len(set(curr.seq for curr in transcriptinfo[currtrans])) > 1:
-            print >>sys.stderr, "multiple"
+            print("multiple", file=sys.stderr)
         #print transcriptinfo[currtrans][0].seq
         if transcriptinfo[currtrans][0].seq in allseqs:
-            print  >>sys.stderr, "duplicate:" + currtrans + ":"+allseqs[transcriptinfo[currtrans][0].seq]
+            print("duplicate:" + currtrans + ":"+allseqs[transcriptinfo[currtrans][0].seq], file=sys.stderr)
         allseqs[transcriptinfo[currtrans][0].seq] = currtrans
         if mode == 'transcript':
             #print >>sys.stderr,currtrans 
@@ -230,7 +230,7 @@ def readtRNAscan(scanfile, genomefile, mode = None):
     trnaseqs = getseqdict(trnalist, faifiles = {orgname:genomefile+".fai"})
     intronseq = defaultdict(str)
     #print >>sys.stderr,trnalist
-    for curr in trnaseqs.iterkeys():
+    for curr in trnaseqs.keys():
         currintron = None
         if curr in tRNAintron:
             start = tRNAintron[curr][0]
@@ -264,7 +264,7 @@ def readtRNAdb(scanfile, genomefile, trnamap):
         if  currline.startswith("Sequence") or  currline.startswith("Name") or  currline.startswith("------"):
             continue
         if len(currline) < 5:
-            print >>sys.stderr, "cannot read line: " +str(linenum) +" of "+scanfile
+            print("cannot read line: " +str(linenum) +" of "+scanfile, file=sys.stderr)
             continue
         fields = currline.split()
         
@@ -293,7 +293,7 @@ def readtRNAdb(scanfile, genomefile, trnamap):
         elif shorttrnascanname in trnamap:
             currtRNA = GenomeRange(orgname, currchrom,start,end, name = trnamap[shorttrnascanname],strand = "+",orderstrand = True)
         else:
-            print >>sys.stderr, "Skipping "+trnascanname+", has no transcript name"
+            print("Skipping "+trnascanname+", has no transcript name", file=sys.stderr)
             continue
         currtrans = currtRNA
 
@@ -320,7 +320,7 @@ def readtRNAdb(scanfile, genomefile, trnamap):
     intronseq = defaultdict(str)
     trnaloci = list()
 
-    for curr in trnaseqs.iterkeys():
+    for curr in trnaseqs.keys():
         currintron = None
         if curr in tRNAintron:
             

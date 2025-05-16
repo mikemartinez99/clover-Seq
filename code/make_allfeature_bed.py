@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #----- IMPORT LIBRARIES
 import sys
@@ -15,11 +15,11 @@ def makefeaturebed(maturetRNAs, lociFile, ensGTF):
 
     #----- Process the mature tRNAs, tRNA loci, and smRNA gene features
     for currfeature in readbed(maturetRNAs):
-        print >>allfeatfile, currfeature.bedstring()
+        print(currfeature.bedstring(), file=allfeatfile)
     for currfeature in readbed(lociFile):
-        print >>allfeatfile, currfeature.bedstring()
+        print(currfeature.bedstring(), file=allfeatfile)
     for currfeature in readgtf(ensGTF):
-        print >>allfeatfile, currfeature.bedstring(name = currfeature.data["genename"])
+        print(currfeature.bedstring(name = currfeature.data["genename"]), file=allfeatfile)
     allfeatfile.close()
 
 def main():

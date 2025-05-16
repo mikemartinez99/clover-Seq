@@ -1,0 +1,4 @@
+IB1 WT tRNA_alignment
+IB2 WT tRNA_alignment
+IB3 KO tRNA_alignment
+IB4 KO tRNA_alignment
