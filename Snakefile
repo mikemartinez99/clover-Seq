@@ -83,10 +83,18 @@ rule all:
         "smRNA_counts/smRNA_raw_counts_by_group.txt",
         "smRNA_counts/smRNA_raw_counts_by_sample.txt",
 
-        #----- Rule exploratory_data_analysis outputs
-        #"plots/PCA_Plot.png",
-        #"plots/read_length_distribution_by_sample.png",
-        
+        #----- Rule normalize_and_PCA outputs
+        "normalized/gene_level_counts_size_factors.csv",
+        "normalized/normalized_gene_level_counts.csv",
+        "PCA/gene_level_variance_plot.png",
+        "PCA/gene_level_loadings.csv",
+        "PCA/gene_level_PCA.png",
+        "normalized/tRNA_isotype_counts_size_factors.csv",
+        "normalized/normalized_tRNA_isotype_counts.csv",
+        "PCA/tRNA_isotype_variance_plot.png",
+        "PCA/tRNA_isotype_loadings.csv",
+        "PCA/tRNA_isotype_PCA.png",
+        "PCA/PCA_Analysis_Summary.png"    
     output:
         "QC/tRNA_multiqc_report.html"
     conda: "r_viz"
@@ -353,30 +361,37 @@ rule count_smRNAs:
     """
 
 #----- Rule to output QC plots
-#rule exploratory_analysis:
- #   input:
- #       counts = "tRNA_counts/tRNA.readcounts.ann.tsv",
- #       lengths = "tRNA_alignment/read_length_distribution.txt"
- #   output:
-  #      "plots/PCA_Plot.png",
-  #      "plots/read_length_distribution_by_sample.png"
-  #  conda: "r_viz"
-  #  resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
-  #  params:
-  #      vis_script = "code/visualizations/CloverSeq_Exploratory_Utils.R",
-   #     read_length_script = "code/visualizations/plot_readlength_distribution.R"
-   # shell: """
+rule normalize_and_PCA:
+    input:
+        geneLevelCounts = "tRNA_counts/gene_level_counts_collapsed.txt",
+        isoformCounts = "tRNA_counts/tRNA_isotype_counts.txt"
+    output:
+        "normalized/gene_level_counts_size_factors.csv",
+        "normalized/normalized_gene_level_counts.csv",
+        "PCA/gene_level_variance_plot.png",
+        "PCA/gene_level_loadings.csv",
+        "PCA/gene_level_PCA.png",
+        "normalized/tRNA_isotype_counts_size_factors.csv",
+        "normalized/normalized_tRNA_isotype_counts.csv",
+        "PCA/tRNA_isotype_variance_plot.png",
+        "PCA/tRNA_isotype_loadings.csv",
+        "PCA/tRNA_isotype_PCA.png",
+        "PCA/PCA_Analysis_Summary.png"
+    conda: "clover-seq"
+    resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
+    params:
+        pcaScript = "code/visualizations/clover-seq-normalize-and-PCA.R",
+        metadata = config["sample_txt"],
+        refLevel = config["refLevel"]
+    shell: """
     
-        #----- Plot (Arg1 = tRNA annotated counts, Arg2 = output dir)
-   #     Rscript {params.vis_script} \
-   #         {input.counts} \
-   #         plots/
-
-        #----- Plot read length distributions
-    #    Rscript {params.read_length_script} \
-    #        {input.lengths} \
-     #       plots/
-
-    
-  #  """
+        #----- Run the script
+        Rscript {params.pcaScript} \
+            {params.metadata} \
+            {params.refLevel} \
+            {input.geneLevelCounts} \
+            {input.isoformCounts} \
+            normalized/ \
+            PCA/   
+    """
 

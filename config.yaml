@@ -43,3 +43,4 @@ genome_bt2_index: "/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/human/h
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 vis_script: "code/visualizations/CloverSeq_Exploratory_Utils.R"
 read_length_script: "code/visualizations/plot_readlength_distribution.R"
+refLevel: "WT"
