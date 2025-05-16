@@ -47,8 +47,6 @@ python make_all_feature_bed.py \
 
 - Add database building workflow implementation to README
 
-- Add conda environment definitions in env_config folder (rename tRAX_env to clover-seq)
-    - Need a conda that is similar to `rnaseq1` -- rename, or can we host for the public?
 
 ## Introduction
 This pipeline supports the analysis of mature-tRNAs and other small RNAs (smRNAs) for human (hg38), mouse (mm10), and fly(dm6) genomes. While typical RNA-Seq preprocessing strategies are employed in this pipeline, special considerations to handle tRNA biology are included. Custom reference databases encompass the full host genome along with mature tRNA transcripts with the addition of 3' CCA tails not encoded genomically. 
@@ -93,15 +91,50 @@ Clover-Seq is adapted from the [tRAX Pipeline](https://github.com/UCSC-LoweLab/t
 
 |Snakemake Rule|Purpose|Conda Environent|
 |--------------|-------|----------------|
-|`trimming`|Trim fastq files to remove adapters and reads not meeting size threshold|`tRAX_env`|
-|`tRNA_align`|Align sequencing reads to combined tRNA sequences and host genome, perform length and quality filtering|`tRAX_env`|
+|`trimming`|Trim fastq files to remove adapters and reads not meeting size threshold|`clover-seq`|
+|`tRNA_align`|Align sequencing reads to combined tRNA sequences and host genome, perform length and quality filtering|`clover-seq`|
 |`tRNA_mark_duplicates`|Flag sequencing duplicates|`rnaseq1`|
-|`tRNA_map_stats`|Collate idxstats and flagstats metrics|`tRAX_env`|
-|`tRNA_count`|Count tRNA reads|`rnaseq1`|
-|`count_smRNAs`|Count tRNA + smRNAs|`tRAX_env`|
+|`tRNA_map_stats`|Collate idxstats and flagstats metrics|`clover-seq`|
+|`tRNA_count`|Count tRNA isotype reads as well as gene-level tRNAs/smRNAs in the genome|`clover-seq`|
+|`read_length_distribution`|Collate read-length statistics for all reads (tRNA + non-tRNA)|`clover-seq`|
+|`count_smRNAs`|Collate smRNA biotype counts across groups and samples|`clover-seq`|
+|`normalize_and_PCA`|Calculate size factors and normalized-counts for tRNA-isotypes and gene-level counts, run PCA|`clover-seq`|
 
 ## Preprocessing Implementation
-Add implementation and rule graph here once finished...
+To run the preprocessing pipeline, modify the `Sample_list_SE.txt` file. This is a comma-delimited three column file (Sample_ID, fastq_1, Group).
+Note that modifying header names will cause the pipeline to fail! Simply modify your sample names, path to the raw fastq.gz file, and Group.
+
+The `config.yaml` file provides important file paths that allow the Snakefile to dynamically run. Utilize the config specific to your organism in the 
+`preprocessing_configs` folder. 
+
+Modify the `job.script.sh` script accordingly to point to your config file using the `--configfile` argument:
+
+```shell
+#----- Run snakemake workflow
+snakemake -s Snakefile \
+    --use-conda \
+    --configfile /preprocessing_configs/<EDIT_HERE> \
+    --conda-frontend conda \
+    --conda-prefix /dartfs/rc/nosnapshots/G/GMBSR_refs/envs/DAC-RNAseq-pipeline \
+    --profile cluster_profile \
+    --rerun-incomplete \
+    --keep-going 
+```
+
+Then, to submit up to 10 jobs in parallel across different cluster nodes (as specified in `cluster_profile/config.yaml`), run the following code:
+
+```shell
+#----- Submit snakemake job script
+sbatch job.script.sh
+```
+To check the status of your Snakemake job and all child jobs it spawns, run the following (replacing NETID with your Dartmouth NetID)
+
+```shell
+squeue | grep "NETID"
+```
+
+You will notice your directory will populate with logs following the convention: log_X_RuleID_JobID.out. For rules that run on a per-sample basis, there should be one log for each sample. For rules that run once for all samples together, there should be only a single log. 
+
 
 ## Differential Expression Implementation
 Add implementation and rule graph here once finished...
