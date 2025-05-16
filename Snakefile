@@ -21,6 +21,7 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 import pandas as pd 
+import csv
 
 #----- Set config file
 configfile: "config.yaml"
@@ -29,6 +30,18 @@ configfile: "config.yaml"
 samples_df = pd.read_table(config["sample_txt"], delimiter = ",").set_index("Sample_ID", drop = False)
 sample_list = list(samples_df["Sample_ID"])
 genome = config["genome"]
+
+#----- Generate run script for read counting
+def generate_runfile(sample_file):
+    with open(sample_file, 'r') as infile, open("runfile.txt", 'w') as outfile:
+        reader = csv.DictReader(infile)
+        for row in reader:
+            sample_id = row["Sample_ID"]
+            group = row['Group']
+            outfile.write(f"{sample_id} {group} tRNA_alignment\n")
+
+#----- Run function
+generate_runfile(config["sample_txt"])
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -60,6 +73,7 @@ rule all:
         "tRNA_counts/tRNA_isotype_counts.txt",
         "tRNA_counts/gene_level_counts_detailed.txt",
         "tRNA_counts/gene_level_counts_collapsed.txt",
+        "tRNA_counts/tRNA_ends_counts.txt",
 
         #----- Rule read_length_distribution outputs
         "tRNA_alignment/full_alignment_read_length_distribution.txt",
@@ -71,8 +85,8 @@ rule all:
         "smRNA_counts/smRNA_raw_counts_by_sample.txt",
 
         #----- Rule exploratory_data_analysis outputs
-        "plots/PCA_Plot.png",
-        "plots/read_length_distribution_by_sample.png",
+        #"plots/PCA_Plot.png",
+        #"plots/read_length_distribution_by_sample.png",
         
     output:
         "QC/tRNA_multiqc_report.html"
@@ -99,7 +113,7 @@ rule trimming:
     output:
         trim_1 = "trimming/{sample}.R1.trim.fastq.gz",
         report = "trimming/logs/{sample}.cutadapt.report"
-    conda: "cutadapt"
+    conda: "clover-seq"
     resources: cpus="8", maxtime="2:00:00", mem_mb="60gb"
     params:
         sample = lambda wildcards: wildcards.sample,
@@ -126,7 +140,7 @@ rule tRNA_align:
         alignLog = "tRNA_alignment/{sample}.alignment.log.txt",
         unalign = "tRNA_unaligned/{sample}.unalign.fastq",
         srtBam = "tRNA_alignment/{sample}.srt.bam"
-    conda: "trax_env"
+    conda: "clover-seq"
     resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
     params:
         sample = lambda wildcards: wildcards.sample,
@@ -203,7 +217,7 @@ rule tRNA_map_stats:
     output:
         idxStats = "tRNA_alignment_stats/{sample}.mkdup.bam.idxstats",
         flagStats = "tRNA_alignment_stats/{sample}.mkdup.bam.flagstat"
-    conda: "trax_env"
+    conda: "clover-seq"
     resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
     params: 
         sample = lambda wildcards: wildcards.sample
@@ -223,23 +237,25 @@ rule tRNA_count:
         genetypeFile = "tRNA_counts/genetype_counts.txt",
         tRNA_isotype_counts = "tRNA_counts/tRNA_isotype_counts.txt",
         trnaCountsDetailed = "tRNA_counts/gene_level_counts_detailed.txt",
-        trnaCountsCollapsed = "tRNA_counts/gene_level_counts_collapsed.txt"
-    conda: "trax_env"
+        trnaCountsCollapsed = "tRNA_counts/gene_level_counts_collapsed.txt",
+        trnaEnds = "tRNA_counts/tRNA_ends_counts.txt"
+    conda: "clover-seq"
     resources: cpus="10", maxtime="2:00:00", mem_mb="60gb",
     params:
         countScript = "code/countreads.py",
-        sampleFile = config["groupFile"],
+        runFile = config["runFile"],
         trna_db = config["trna_db"]
     shell: """
     
         #----- Run the countreads.py script
         python {params.countScript} \
-            --samplefile={params.sampleFile} \
+            --samplefile={params.runFile} \
             --ensemblgtf={params.trna_db}/genes.gtf \
             --trnaloci={params.trna_db}/db-trnaloci.bed \
             --maturetrnas={params.trna_db}/db-maturetRNAs.bed \
             --trnatable={params.trna_db}/db-trnatable.txt \
             --genetypefile={output.genetypeFile} \
+            --trnaends={output.trnaEnds} \
             --trnacounts={output.tRNA_isotype_counts} > {output.trnaCountsDetailed}
 
         #----- Collapse the detailed tRNA counts to overall tRNA counts
@@ -278,7 +294,7 @@ rule read_length_distribution:
         expand("tRNA_alignment/{sample}.mkdup.bam", sample = sample_list)
     output:
         distribution = "tRNA_alignment/full_alignment_read_length_distribution.txt"
-    conda: "trax_env"
+    conda: "clover-seq"
     resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
     params:
     shell: """
@@ -314,18 +330,18 @@ rule count_smRNAs:
         readLengths = "smRNA_counts/read_length_distribution.txt",
         groupCounts = "smRNA_counts/smRNA_raw_counts_by_group.txt",
         counts = "smRNA_counts/smRNA_raw_counts_by_sample.txt"
-    conda: "trax_env"
+    conda: "clover-seq"
     resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
     params:
         smRNA_count = "code/count_all_smRNA.py",
-        sampleFile = config["groupFile"],
+        runFile = config["runFile"],
         trna_db = config["trna_db"]
 
     shell: """
     
         #----- Run the code to count all tRNA + smRNA
         python {params.smRNA_count} \
-            --samplefile={params.sampleFile} \
+            --samplefile={params.runFile} \
             --trnatable={params.trna_db}/db-trnatable.txt \
             --ensemblgtf={params.trna_db}/genes.gtf \
             --trnaloci={params.trna_db}/db-trnaloci.bed \
@@ -338,30 +354,30 @@ rule count_smRNAs:
     """
 
 #----- Rule to output QC plots
-rule exploratory_analysis:
-    input:
-        counts = "tRNA_counts/tRNA.readcounts.ann.tsv",
-        lengths = "tRNA_alignment/read_length_distribution.txt"
-    output:
-        "plots/PCA_Plot.png",
-        "plots/read_length_distribution_by_sample.png"
-    conda: "r_viz"
-    resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
-    params:
-        vis_script = config["vis_script"],
-        read_length_script = config["read_length_script"]
-    shell: """
+#rule exploratory_analysis:
+ #   input:
+ #       counts = "tRNA_counts/tRNA.readcounts.ann.tsv",
+ #       lengths = "tRNA_alignment/read_length_distribution.txt"
+ #   output:
+  #      "plots/PCA_Plot.png",
+  #      "plots/read_length_distribution_by_sample.png"
+  #  conda: "r_viz"
+  #  resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
+  #  params:
+  #      vis_script = "code/visualizations/CloverSeq_Exploratory_Utils.R",
+   #     read_length_script = "code/visualizations/plot_readlength_distribution.R"
+   # shell: """
     
         #----- Plot (Arg1 = tRNA annotated counts, Arg2 = output dir)
-        Rscript {params.vis_script} \
-            {input.counts} \
-            plots/
+   #     Rscript {params.vis_script} \
+   #         {input.counts} \
+   #         plots/
 
         #----- Plot read length distributions
-        Rscript {params.read_length_script} \
-            {input.lengths} \
-            plots/
+    #    Rscript {params.read_length_script} \
+    #        {input.lengths} \
+     #       plots/
 
     
-    """
+  #  """
 

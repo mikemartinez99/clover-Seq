@@ -4,8 +4,8 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # GENERAL SETTINGS
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-sample_txt: runfile.txt
-groupFile: "code/MM_Working_Scripts/sample_file.txt"
+sample_txt: "Sample_list_SE.txt"
+runFile: "runfile.txt"
 layout: "single"
 genome: "hg38"
 
@@ -37,17 +37,9 @@ genome_bt2_index: "/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/human/h
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # COUNT PARAMETERS
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-countScript: "code/tRNA_counts.awk"
-tpm_normalization: "code/tRNA_readcount_to_tpm.py"
-fc_strand: "0"
-genome_gtf: "/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/human/ensembl-annotations/Homo_sapiens.GRCh38.97.gtf"
-smRNA_gtf: "/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases/hg38_db/genes.gtf"
-fc_ann_script: "code/add_gene_to_ensg.py"
-genome_tpm_script: "code/readcnt_to_rpkmtpm.py"
-featureCounts: "/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/misc/sullivan/tools/featurecounts/subread-2.0.1-Linux-x86_64/bin/featureCounts"
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # VISUALIZATION
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-vis_script: "code/CloverSeq_Exploratory_Utils.R"
-read_length_script: "code/plot_readlength_distribution.R"
+vis_script: "code/visualizations/CloverSeq_Exploratory_Utils.R"
+read_length_script: "code/visualizations/plot_readlength_distribution.R"
