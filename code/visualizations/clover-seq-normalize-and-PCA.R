@@ -110,7 +110,10 @@ ddsFull <- DESeq2::DESeq(ddsFull)
 
 #----- Extract size factors
 full_sizeFactors <- DESeq2::sizeFactors(ddsFull)
-write.csv(full_sizeFactors, file = paste0(normalizedDir, "gene_level_counts_size_factors.csv"))
+full_sizeFactors <- t(full_sizeFactors)
+colnames(full_sizeFactors) <- NULL
+full_sizeFactors <- as.vector(full_sizeFactors)
+write.table(rbind(rownames(meta), full_sizeFactors), file = paste0(normalizedDir, "gene_level_counts_size_factors.csv"), row.names=FALSE, col.names=FALSE)
 message("Size factors saved...")
 
 #----- Extract normalized counts
@@ -228,6 +231,10 @@ ddstrna <- DESeq2::DESeq(ddstrna)
 
 #----- Extract size factors
 trna_sizeFactors <- DESeq2::sizeFactors(ddstrna)
+trna_sizeFactors <- t(trna_sizeFactors)
+colnames(trna_sizeFactors) <- NULL
+trna_SizeFactors <- as.vector(trna_sizeFactors)
+write.table(rbind(rownames(meta), trna_sizeFactors), file = paste0(normalizedDir, "trna_isotype_counts_size_factors.csv"), row.names=FALSE, col.names=FALSE)
 write.csv(trna_sizeFactors, file = paste0(normalizedDir, "tRNA_isotype_counts_size_factors.csv"))
 message("Size factors saved...")
 
