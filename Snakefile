@@ -1,8 +1,9 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# clover-Seq pipeline for analysis of tRNAs
+# Clover-Seq tRNA data pre-processing workflow
+#
+# This code was modified from tRAX (doi: 10.1101/2022.07.02.498565)
 # 
-# Authors: Mike Martinez
-# Lab: GDSC
+# Modified by Mike Martinez (Genomic Data Science Core - Dartmouth)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 #----- TO DO
@@ -13,8 +14,6 @@
 #- Built tRNA-only bowtie2 indices
 #- Figure out the mitoDB issue
 #- Build tRNA + mitoRNA db if we can figure out the mito issue
-#- Break down the coveragePlot source code into new code
-#- Conda environment for featureCounts
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # SET GLOBAL SCOPE PYTHON VARIABLES (EXECUTED BEFORE SNAKEMAKE)

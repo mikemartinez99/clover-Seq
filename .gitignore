@@ -20,5 +20,6 @@ plots/
 code/*.pyc
 code/*.pdf
 code/*.txt
+code/__pycache__/*
 
 
