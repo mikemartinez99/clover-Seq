@@ -1,5 +1,4 @@
-Sample_ID,fastq_1
-IB1,data/IB_1_S1_R1_001.fastq.gz
-IB2,data/IB_2_S2_R1_001.fastq.gz
-IB3,data/IB_3_S3_R1_001.fastq.gz
-IB4,data/IB_4_S4_R1_001.fastq.gz
+IB1 WT tRNA_alignment
+IB2 WT tRNA_alignment
+IB3 KO tRNA_alignment
+IB4 KO tRNA_alignment
