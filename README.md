@@ -45,18 +45,17 @@ python make_all_feature_bed.py \
     genes.gtf
 ```
 
-- Instead of using awk counting of idxstats for `rule tRNA_count`, implement `countreads.py` in a similar fashion to how `rule count_smRNAs` is implemented.
+- Loadings file is currently outputting eigenvectors and not loadings. This needs to be changed in the PCA R script.
 
-- Improve visualizations for exploratory analysis. 
-    - Compare R median of ratios normalization script to miRNA-PCA script
-
-- Add R visualization scripts to their own subfolder in the `code` directory
-
-- **DOUBLE CHECK** that our mapping strategy allows for multi-mapping which is super important because of codon degeneracy.
+- Need to generate visualizations for uniquely mapped, multimapped, unmapped, type-counts, CCA endpoint barplots, amino counts, read length distributions (both total and tRNA/pre-tRNA)
 
 - Start working on differential expression workflow
 
 - Add database building workflow implementation to README
+
+- Make prebuilt preprocessing configs for each genome
+
+- Add make_feature_bed rule to database snakemake workflow
 
 
 ## Introduction
@@ -98,7 +97,7 @@ Explanation here...
 
 
 ## Pipeline Summary
-Clover-Seq is adapted from the [tRAX Pipeline](https://github.com/UCSC-LoweLab/tRAX) to be implemented as a Snakemake workflow to allow sample parallelization and efficiency. As input, this pipeline takes raw fastq.gz files, a config.yaml file, and two text files to guide the Snakemake script.
+Clover-Seq is adapted from the [tRAX Pipeline](https://github.com/UCSC-LoweLab/tRAX) to be implemented as a Snakemake workflow, allowing sample parallelization and improved modularity and efficiency. As input, this pipeline takes raw fastq.gz files, a config.yaml, and a sample metadata sheet.
 
 |Snakemake Rule|Purpose|Conda Environent|
 |--------------|-------|----------------|
