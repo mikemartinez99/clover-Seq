@@ -37,7 +37,7 @@ suppressMessages(library(SummarizedExperiment))
 #----- Set command line args
 args <- commandArgs(trailingOnly = TRUE)
 
-if (length(args) < 5) {
+if (length(args) < 4) {
   stop("Usage: RScript PCA.R <Sample_list_SE.txt> <reference level> <gene_level_counts_collapsed.txt> <tRNA_isotype_counts.txt> <normalized data output path/> <PCA output path/>")
 }
 
@@ -45,15 +45,24 @@ metadata <- args[1]
 refLevel <- args[2]
 fullData <- args[3]
 tRNAData <- args[4]
-normalizedDir <- args[5]
-pcaDir <- args[6]
 
+
+#----- Set output directories
+normalizedDir <- "05_normalized/"
+pcaDir <- "06_PCA/"
+rdsDir <- "07_rds_files/"
+
+#---- Create output directories
 if (!dir.exists(normalizedDir)) {
   dir.create(normalizedDir)
 }
 
 if (!dir.exists(pcaDir)) {
   dir.create(pcaDir)
+}
+
+if (!dir.exists(rdsDir)) {
+  dir.create(rdsDir)
 }
 
 #----- Debugging
@@ -107,6 +116,9 @@ levels(colData(ddsFull)$Group)
 
 #----- Run DESeq2 on full genome + tRNA counts
 ddsFull <- DESeq2::DESeq(ddsFull)
+
+#----- Save rds
+saveRDS(ddsFull, file = paste0(rdsDir, "gene_level_DESeq2_object.Rds"))
 
 #----- Extract size factors
 full_sizeFactors <- DESeq2::sizeFactors(ddsFull)
@@ -193,8 +205,7 @@ loadingsFull <- loadingsFull[match(rownames(meta), rownames(loadingsFull)),]
 loadingsFull$Group <- meta$Group
 
 #----- Extract the rotations
-rotationsFull <- PCsFull[[2]]
-write.csv(rotationsFull, file = paste0(pcaDir, "gene_level_loadings.csv"))
+write.csv(loadingsFull, file = paste0(pcaDir, "gene_level_loadings.csv"))
 message("PCA loadings saved...")
 
 #----- Plot PCA
@@ -228,6 +239,8 @@ levels(colData(ddstrna)$Group)
 
 #----- Run DESeq2 on trna genome + tRNA counts
 ddstrna <- DESeq2::DESeq(ddstrna)
+saveRDS(ddsFull, file = paste0(rdsDir, "tRNA_isotype_DESeq2_object.Rds"))
+
 
 #----- Extract size factors
 trna_sizeFactors <- DESeq2::sizeFactors(ddstrna)
@@ -282,8 +295,7 @@ loadingstrna <- loadingstrna[match(rownames(meta), rownames(loadingstrna)),]
 loadingstrna$Group <- meta$Group
 
 #----- Extract the rotations
-rotationstrna <- PCstrna[[2]]
-write.csv(rotationstrna, file = paste0(pcaDir, "tRNA_isotype_loadings.csv"))
+write.csv(loadingstrna, file = paste0(pcaDir, "tRNA_isotype_loadings.csv"))
 message("PCA loadings saved...")
 
 #----- Plot PCA
