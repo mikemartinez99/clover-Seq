@@ -1,10 +1,21 @@
-#--------- GDSC:Clover-Seq Configuration File ----------#     
-#-------------------------------------------------------#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                 HG38 PREPROCESSING CONFIGURATION FILE                        #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Workflow Name:   GDSC-Clover-Seq (tRNA-sequencing)
+# Description:     Configuration settings for clover-seq preprocessing
+# Author:          Mike Martinez (Genomic Data Science Core - Dartmouth)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Instructions:
+# - Fill in each parameter as needed.
+# - Maintain consistent formatting (YAML is space and case-sensitive).
+# - Indent with spaces, not tabs.
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # GENERAL SETTINGS
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 sample_txt: "Sample_list_SE.txt"
+runFile: "runfile.txt"
 layout: "single"
 genome: "hg38"
 refLevel: "WT"

@@ -1,10 +1,21 @@
-#--------- GDSC:Clover-Seq Configuration File ----------#     
-#-------------------------------------------------------#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                 DM6 PREPROCESSING CONFIGURATION FILE                         #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Workflow Name:   GDSC-Clover-Seq (tRNA-sequencing)
+# Description:     Configuration settings for clover-seq preprocessing
+# Author:          Mike Martinez (Genomic Data Science Core - Dartmouth)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Instructions:
+# - Fill in each parameter as needed.
+# - Maintain consistent formatting (YAML is space and case-sensitive).
+# - Indent with spaces, not tabs.
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # GENERAL SETTINGS
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 sample_txt: "Sample_list_SE.txt"
+runFile: "runfile.txt"
 layout: "single"
 genome: "dm6"
 refLevel: "WT"
@@ -13,7 +24,7 @@ refLevel: "WT"
 # tRNA DATABASE TAR ARCHIVE PATH
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 trna_db: "/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases/dm6_db"
-bt2_index: "/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases/dm6_db/bt2_index/db-tRNAgenome"
+bt2_index: /dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases/dm6_db/bt2_index/db-tRNAgenome
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # TRIMMING PARAMETERS

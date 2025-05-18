@@ -1,5 +1,15 @@
-#----- GDSC-tRAX v2 db Configuration File --------------#     
-#-------------------------------------------------------#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                 MM10 DATABASE BUILDING CONFIGURATION FILE                    #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Workflow Name:   GDSC-Clover-Seq (tRNA-sequencing)
+# Description:     Configuration settings for clover-seq database building
+# Author:          Mike Martinez (Genomic Data Science Core - Dartmouth)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Instructions:
+# - Fill in each parameter as needed.
+# - Maintain consistent formatting (YAML is space and case-sensitive).
+# - Indent with spaces, not tabs.
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # GENERAL SETTINGS

@@ -1,5 +1,15 @@
-#--------- GDSC:Clover-Seq Configuration File ----------#     
-#-------------------------------------------------------#
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                 GENERAL PREPROCESSING CONFIGURATION FILE                     #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Workflow Name:   GDSC-Clover-Seq (tRNA-sequencing)
+# Description:     Configuration settings for clover-seq preprocessing
+# Author:          Mike Martinez (Genomic Data Science Core - Dartmouth)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# Instructions:
+# - Fill in each parameter as needed.
+# - Maintain consistent formatting (YAML is space and case-sensitive).
+# - Indent with spaces, not tabs.
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # GENERAL SETTINGS
@@ -8,6 +18,7 @@ sample_txt: "Sample_list_SE.txt"
 runFile: "runfile.txt"
 layout: "single"
 genome: "hg38"
+refLevel: "WT"
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # tRNA DATABASE TAR ARCHIVE PATH
@@ -27,15 +38,3 @@ minlength: "15"
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 maxMaps: "100"
 nPenalty: "5"
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# GENOME ALIGNMENT PARAMETERS
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-genome_bt2_index: "/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/human/hg38-bowtie2-index/hg38-bowtie2-index"
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# VISUALIZATION
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-vis_script: "code/visualizations/CloverSeq_Exploratory_Utils.R"
-read_length_script: "code/visualizations/plot_readlength_distribution.R"
-refLevel: "WT"

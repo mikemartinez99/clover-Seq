@@ -98,6 +98,7 @@ rule all:
         "QC/tRNA_multiqc_report.html"
     conda: "r_viz"
     resources: cpus="10", maxtime="2:00:00", mem_mb="60gb"
+    benchmark: "benchmarks/rule_all.txt"
     params:
         genome = config["genome"],
     shell:"""
@@ -120,6 +121,7 @@ rule trimming:
         report = "trimming/logs/{sample}.cutadapt.report"
     conda: "clover-seq"
     resources: cpus="8", maxtime="2:00:00", mem_mb="60gb"
+    benchmark: "benchmarks/rule_trimming/{sample}_trimming_bm.txt"
     params:
         sample = lambda wildcards: wildcards.sample,
         fastq_1 = lambda wildcards: samples_df.loc[wildcards.sample, "fastq_1"],
@@ -147,6 +149,7 @@ rule tRNA_align:
         srtBam = "tRNA_alignment/{sample}.srt.bam"
     conda: "clover-bowtie2"
     resources: cpus="10", maxtime="6:00:00", mem_mb="60gb"
+    benchmark: "benchmarks/rule_tRNA_align/{sample}_tRNA_align_bm.txt"
     params:
         sample = lambda wildcards: wildcards.sample,
         bt2_index = config["bt2_index"],
@@ -193,6 +196,7 @@ rule tRNA_mark_duplicates:
         mkdupLog = "tRNA_alignment/{sample}.mkdup.log.txt"
     conda: "rnaseq1"
     resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
+    benchmark: "benchmarks/rule_tRNA_mark_duplicates/{sample}_tRNA_mark_duplicates_bm.txt"
     params:
         sample = lambda wildcards: wildcards.sample
     shell: """
@@ -222,6 +226,7 @@ rule tRNA_map_stats:
         flagStats = "tRNA_alignment_stats/{sample}.mkdup.bam.flagstat"
     conda: "clover-seq"
     resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
+    benchmark: "benchmarks/rule_tRNA_map_stats/{sample}_tRNA_map_stats_bm.txt"
     params: 
         sample = lambda wildcards: wildcards.sample
     shell: """
@@ -244,6 +249,7 @@ rule tRNA_count:
         trnaEnds = "tRNA_counts/tRNA_ends_counts.txt"
     conda: "clover-seq"
     resources: cpus="10", maxtime="2:00:00", mem_mb="60gb",
+    benchmark: "benchmarks/rule_tRNA_count/tRNA_count_bm.txt"
     params:
         countScript = "code/countreads.py",
         runFile = config["runFile"],
@@ -299,6 +305,7 @@ rule read_length_distribution:
         distribution = "tRNA_alignment/full_alignment_read_length_distribution.txt"
     conda: "clover-seq"
     resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
+    benchmark: "benchmarks/rule_read_length_distribution/read_length_distribution_bm.txt"
     params:
     shell: """
     
@@ -335,6 +342,7 @@ rule count_smRNAs:
         counts = "smRNA_counts/smRNA_raw_counts_by_sample.txt"
     conda: "clover-seq"
     resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
+    benchmark: "benchmarks/rule_count_smRNAs/count_smRNAs_bm.txt"
     params:
         smRNA_count = "code/count_all_smRNA.py",
         runFile = config["runFile"],
@@ -375,6 +383,7 @@ rule normalize_and_PCA:
         "PCA/PCA_Analysis_Summary.png"
     conda: "clover-seq"
     resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
+    benchmark: "benchmarks/rule_normalize_and_PCA/normalize_and_PCA_bm.txt"
     params:
         pcaScript = "code/visualizations/clover-seq-normalize-and-PCA.R",
         metadata = config["sample_txt"],
