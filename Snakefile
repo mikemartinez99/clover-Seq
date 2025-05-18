@@ -57,7 +57,6 @@ rule all:
         #----- Rule tRNA_alignment outputs
         expand("tRNA_alignment/{sample}.alignment.log.txt", sample = sample_list),
         expand("tRNA_alignment/{sample}.srt.bam", sample = sample_list),
-        expand("tRNA_unaligned/{sample}.unalign.fastq", sample = sample_list),
 
         #----- Rule tRNA_mark_duplicates outputs
         expand("tRNA_alignment/{sample}.mkdup.bam", sample = sample_list),
@@ -101,7 +100,6 @@ rule all:
     resources: cpus="10", maxtime="2:00:00", mem_mb="60gb"
     params:
         genome = config["genome"],
-        vis_script = config["vis_script"]
     shell:"""
     
         #----- Run MultiQC Report
@@ -145,10 +143,10 @@ rule tRNA_align:
     output:
         #sam = "alignment/{sample}.aln.sam",
         alignLog = "tRNA_alignment/{sample}.alignment.log.txt",
-        unalign = "tRNA_unaligned/{sample}.unalign.fastq",
+        #unalign = "tRNA_unaligned/{sample}.unalign.fastq",
         srtBam = "tRNA_alignment/{sample}.srt.bam"
-    conda: "clover-seq"
-    resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
+    conda: "clover-bowtie2"
+    resources: cpus="10", maxtime="6:00:00", mem_mb="60gb"
     params:
         sample = lambda wildcards: wildcards.sample,
         bt2_index = config["bt2_index"],
@@ -164,13 +162,11 @@ rule tRNA_align:
             -k {params.maxMaps} \
             --very-sensitive \
             --np {params.nPenalty} \
-            --reorder \
             --ignore-qual \
-            --un {output.unalign} \
             -p {resources.cpus} \
             -S tRNA_alignment/{params.sample}.aln.sam 2> {output.alignLog}
 
-        #----- subset reads for aligned length > 15 & < 90bp & any reads with gaps (XO/XG tags)
+        #----- subset reads for aligned length > 15 & < 90bp 
         samtools view -h tRNA_alignment/{params.sample}.aln.sam | \
             awk 'BEGIN {{OFS="\t"}} $1 ~ /^@/ || ((length($10) > 15 && length($10) <= 90))' | \
             samtools view -Sb - > tRNA_alignment/{params.sample}.bam
@@ -393,6 +389,4 @@ rule normalize_and_PCA:
             {input.isoformCounts} \
             normalized/ \
             PCA/   
-
     """
-
