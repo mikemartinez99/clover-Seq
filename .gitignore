@@ -1,18 +1,16 @@
 .snakemake
 *.out
 data/
-trimming/
-alignment/
-unaligned/
-tRNA_alignment/
-tRNA_unaligned/
-tRNA_alignment_stats/
-tRNA_counts/
-tRNA_index/
-smRNA_counts
-genome_alignment/
-genome_filtered/
-genome_counts/
+01_trimming/
+02_tRNA_alignment/
+02_tRNA_alignment/stats/
+03_tRNA_counts/
+04_smRNA_counts/
+05_normalized/
+06_PCA/
+07_rds_files/
+08_plots/
+09_QC/
 code/MM_Working_Scripts/
 code/test/
 QC/
@@ -23,5 +21,6 @@ code/*.txt
 code/__pycache__/*
 normalized/
 PCA/
+*.out
 
 
