@@ -951,7 +951,7 @@ if __name__ == "__main__":
                        help='Set maximum number of allowable mismatches')
     parser.add_argument('--trnaends', default="tRNA_ends.txt",
                        help='Set maximum number of allowable mismatches')
-    parser.add_argument('--trnauniquecounts', default = "unique_tRNA_counts.txt",
+    parser.add_argument('--trnauniquecounts', default = "tRNA_counts/unique_tRNA_counts.txt",
                         help = "Unique tRNA counts")
     
     

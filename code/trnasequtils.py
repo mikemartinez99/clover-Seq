@@ -486,7 +486,7 @@ class samplefile:
     def getbamlist(self):
         return list(curr+ ".mkdup.bam" for curr in self.samplelist)
     def getbam(self, sample):
-        return "../tRNA_alignment/" + sample + ".mkdup.bam" 
+        return "tRNA_alignment/" + sample + ".mkdup.bam" 
     def getmergebam(self, sample):
         return self.bamdir + "/" + sample + "-merge.bam" 
     def getfastq(self, sample):
