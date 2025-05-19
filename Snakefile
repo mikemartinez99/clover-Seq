@@ -50,11 +50,11 @@ generate_runfile(config["sample_txt"])
 #----- Final Rule
 rule all:
     input:
-        #----- Rule 01_trimming outputs
+        #----- Rule trimming outputs
         expand("01_trimming/{sample}.R1.trim.fastq.gz", sample = sample_list),
         expand("01_trimming/logs/{sample}.cutadapt.report", sample = sample_list),
 
-        #----- Rule 02_tRNA_alignment outputs
+        #----- Rule tRNA_alignment outputs
         expand("02_tRNA_alignment/{sample}.alignment.log.txt", sample = sample_list),
         expand("02_tRNA_alignment/{sample}.srt.bam", sample = sample_list),
 
@@ -93,7 +93,15 @@ rule all:
         "06_PCA/tRNA_isotype_variance_plot.png",
         "06_PCA/tRNA_isotype_loadings.csv",
         "06_PCA/tRNA_isotype_PCA.png",
-        "06_PCA/PCA_Analysis_Summary.png"    
+        "06_PCA/PCA_Analysis_Summary.png",
+    
+        #----- Rule plot_counts outputs
+        "08_plots/Grouped_boxplot_norm_tRNA_isotypes_by_Sample_and_Anticodon.png",
+        "08_plots/tRNA_counts_normalized.png",
+        "08_plots/Isoacceptor_counts_normalized.png",
+        "08_plots/CCA_ends_Relative_Abundances.png",
+        "08_plots/CCA_ends_normalized_absolute_abundances.png",
+   
     output:
         "09_QC/tRNA_multi_QC_report.html"
     conda: "r_viz"
@@ -215,6 +223,7 @@ rule tRNA_mark_duplicates:
 
         #----- Index the mkdup bam
         samtools index {output.mkdup}
+        
     """
 
 #----- Rule to collate tRNA mapping statistics
@@ -234,7 +243,7 @@ rule tRNA_map_stats:
         #----- Collect metrics
         samtools idxstats {input.mkdup} > {output.idxStats}
         samtools flagstat {input.mkdup} > {output.flagStats}
-    
+  
     """
 
 #----- Rule to count tRNAs
@@ -366,7 +375,7 @@ rule count_smRNAs:
     """
 
 #----- Rule to output 09_QC plots
-rule normalize_and_06_PCA:
+rule normalize_and_PCA:
     input:
         geneLevelCounts = "03_tRNA_counts/gene_level_counts_collapsed.txt",
         isoformCounts = "03_tRNA_counts/tRNA_isotype_counts.txt"
@@ -394,8 +403,32 @@ rule normalize_and_06_PCA:
         #----- Run the script
         Rscript {params.PCAScript} \
             {params.metadata} \
-            {params.refLevel} \
-            {input.geneLevelCounts} \
-            {input.isoformCounts} \
+            {params.refLevel}
+    """
 
+#----- Rule to generate plots
+rule plot_counts:
+    input:
+        "05_normalized/normalized_tRNA_isotype_counts.csv"
+    output:
+        "08_plots/Grouped_boxplot_norm_tRNA_isotypes_by_Sample_and_Anticodon.png",
+        "08_plots/tRNA_counts_normalized.png",
+        "08_plots/Isoacceptor_counts_normalized.png",
+        "08_plots/CCA_ends_Relative_Abundances.png",
+        "08_plots/CCA_ends_normalized_absolute_abundances.png"
+    conda: "clover-seq"
+    resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
+    benchmark: "benchmarks/rule_plot_counts/plot_counts_bm.tsv"
+    params:
+        plotScript = "code/visualizations/clover-seq-plot-counts.R",
+        metadata = config["sample_txt"],
+        refLevel = config["refLevel"]
+    shell: """
+    
+        #----- Run plotting script
+        Rscript {params.plotScript} \
+            {params.metadata} \
+            {params.refLevel}
+
+    
     """
