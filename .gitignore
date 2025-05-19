@@ -23,5 +23,6 @@ normalized/
 PCA/
 *.out
 benchmarks/
+runfile.txt
 
 
