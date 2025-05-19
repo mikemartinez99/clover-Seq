@@ -4,19 +4,18 @@
 ![Python Version](https://img.shields.io/badge/python-3.8.5-blue)
 ![R Version](https://img.shields.io/badge/R-4.4.3-blue)
 
-Snakemake workflow for the comprehensive analyses of mature tRNAs and other small RNAs (smRNAs) from high-throughput sequencing data. 
+Modular Snakemake workflows for the comprehensive analyses of mature tRNAs and other small RNAs (smRNAs) from high-throughput sequencing data. 
 
 
 <img src="img/CloverSeq_CQB_logo.png" alt="Description" width="700" height="450" style="border: none;" />
 
 
 # Table of Contents
-- [Development To Do](#development-to-do)
 - [Introduction](#introduction)
 - [Installation](#installation)
-- [Database Build Module (Optional)](#database-building-module-optional)
+- [Database Build Module](#database-build-module)
 - [Database Build Implementation](#database-build-implementation)
-- [Preprocessing Module](#pipeline-summary)
+- [Preprocessing Module](#preprocessing-module)
 - [Preprocessing Implementation](#preprocessing-implementation)
 - [Preprocessing Outputs](#preprocessing-outputs)
     - [01 Trimming](#01-trimming)
@@ -27,44 +26,19 @@ Snakemake workflow for the comprehensive analyses of mature tRNAs and other smal
     - [06 PCA](#06-pca)
     - [07 Rds Files](#07-rds-files)
     - [08 Plots](#08-plots)
-    - [09 QC](#08-qc)
+    - [09 QC](#09-qc)
 - [Differential Expression Implementation](#differential-expression-implementation)
-- [Files](#files)
 - [Development Notes](#development-notes)
 - [Contact](#contact)
 - [Citation and Licensing](#citation-and-licensing)
 
 
-## Development To Do
-- Within each database directory in GMBSR/genomic_references, run the `make_all_feature_bed.py` code to generate an `allfeats.bed` file. Also include a README in each database that says how this file is ran.
-Or, add it as a snakemake rule for the database build snakemake (probably go with this for cleanliness)
-
-```shell
-python make_all_feature_bed.py \
-    db-maturetRNAs.bed \
-    db-trnaloci.bed \
-    genes.gtf
-```
-
-- Loadings file is currently outputting eigenvectors and not loadings. This needs to be changed in the PCA R script.
-
-- Need to generate visualizations for uniquely mapped, multimapped, unmapped, type-counts, CCA endpoint barplots, amino counts, read length distributions (both total and tRNA/pre-tRNA)
-
-- Start working on differential expression workflow
-
-- Add database building workflow implementation to README
-
-- Make prebuilt preprocessing configs for each genome
-
-- Add make_feature_bed rule to database snakemake workflow
-
-
 ## Introduction
-This pipeline supports the analysis of mature-tRNAs and other small RNAs (smRNAs) for human (hg38), mouse (mm10), and fly(dm6) genomes through 3 main modules: 
+This pipeline supports the analysis of mature-tRNAs and other small RNAs (smRNAs) for human (hg38), mouse (mm10), and fly(dm6) genomes through 3 main modules. While typical RNA-Seq preprocessing strategies are emplyed in this pipeline, special considerations to handle tRNA biology are included. Custom reference databases encompass putative mature tRNAs as well as unique tRNA isodecoders as well as tRNA loci in the native host genome along with other annotated smRNAs including miRNA, sRNA, siRNA, snRNA, snoRNA, ribozymes and others. Mature tRNA transcripts are modified to include the addition of a 3' CCA tail which are not encoded genomically. Results are reported at two levels: the gene level which included mature tRNAs plus all other native tRNA-loci and smRNAs, and the isodecoder level, which is tRNA-specific.
 
-<img src="img/pipeline_graphic.png" alt="Description" width="450" height="300" style="border: none;" />
+<img src="img/pipeline_graphic.png" alt="Description" width="750" height="400" style="border: none;" />
 
-While typical RNA-Seq preprocessing strategies are emplyed in this pipeline, special considerations to handle tRNA biology are included. Custom reference databases encompass putative mature tRNAs as well as unique tRNA isodecoders as well as tRNA loci in the native host genome along with other annotated smRNAs including miRNA, sRNA, siRNA, snRNA, snoRNA, ribozymes and others. Mature tRNA transcripts are modified to include the addition of a 3' CCA tail which are not encoded genomically. Results are reported at two levels: the gene level which included mature tRNAs plus all other native tRNA-loci and smRNAs, and the isodecoder level, which is tRNA-specific.
+
 
 ## Installation
 To install this code, clone the github repository
@@ -87,10 +61,10 @@ conda env create -f env_config/<name.yaml>
 ```
 
 
-## Database Build Module (Optional)
+## Database Build Module
 tRNA-genome references encompass the full host genome with additional tRNA-specific gene information obtained from [gtRNAdb](https://gtrnadb.ucsc.edu) through [tRNA-scan](https://lowelab.ucsc.edu/tRNAscan-SE/) experiments. Encompassed in these databases are bed files of mature tRNA sequences as well as native pre-tRNA loci in the host genome. Stockholm alignment files and alignment-number files help with downstream conversion of tRNA alignments to [Sprinzl-positions](http://polacek.dcbp.unibe.ch/publications/Holmes%20et%20al_tDR%20nomenclature_Nat.Meth_2023.pdf). 
 
-These references are pre-downloaded along with pre-built Bowtie2 indices and hosted on the [Genomics and Molecular Biology Shared Resources](https://geiselmed.dartmouth.edu/gsr/) on Discovery for ease of use and efficiency. However, if you wish to build from scratch, or customize the reference, a workflow for doing so is included. 
+These references have been pre-downloaded, pre-built, and pre-indexed and are hosted by [Genomics and Molecular Biology Shared Resources](https://geiselmed.dartmouth.edu/gsr/) on Discovery for ease of use and efficiency. However, if you wish to build from scratch, or customize the reference, the first module of this pipeline can be used. 
 
 <img src="img/database_rulegraph.png" alt="Description" width="200" height="300"/>
 
@@ -102,12 +76,14 @@ These references are pre-downloaded along with pre-built Bowtie2 indices and hos
 
 
 ## Database Build Implementation
+**NOTE: THIS IS OPTIONAL, AND IT IS RECOMMENDED TO USE A PRE-BUILT DATABASE**
 
 References can be accessed at the following path on Discovery: 
 
 `/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases`
 
-If you do not wish to use a pre-built database, a fresh one can be created using the following steps.
+To create a tRNA database from scratch, following the steps below:
+
 
 1. Update your `module1_job.script.sh` script to point Snakemake to one of the database configs in `database_configs` folder. These configs are organism-specific and point to specific URLs on [gtRNAdb](https://gtrnadb.ucsc.edu). 
 
@@ -133,14 +109,15 @@ sbatch module1_job.script.sh
 ```
 
 To check the status of your Snakemake job and all child jobs it spawns, run the following (replacing NETID with your Dartmouth NetID)
-**Note** This applied for all 3 modules!
+
+**TIP** This job checking line can be applied for all 3 modules!
 
 ```shell
 #----- Check user job status
 squeue | grep "NETID"
 ```
 
-You will notice your directory will populate with logs following the convention: log_X_RuleID_JobID.out. For rules that run on a per-sample basis, there should be one log for each sample. For rules that run once for all samples together, there should be only a single log. 
+**TIP** You will notice your directory will populate with logs following the convention: log_X_RuleID_JobID.out. For rules that run on a per-sample basis, there should be one log for each sample. For rules that run once for all samples together, there should be only a single log. 
 
 ## Preprocessing Module
 Clover-Seq is adapted from the [tRAX Pipeline](https://github.com/UCSC-LoweLab/tRAX) to be implemented as a Snakemake workflow, allowing sample parallelization and improved modularity and efficiency. As input, this pipeline takes raw fastq.gz files, a config.yaml, and a sample metadata sheet.
@@ -211,12 +188,12 @@ To check the status of your Snakemake job and all child jobs it spawns, run the 
 
 
 ## Preprocessing Outputs
-The preprocessing module of this workflow contains 8 major output sections across multiple folders. Their outputs are explained below
+The preprocessing module of this workflow contains 9 major output folder. Their contents are exaplined in the following sections. 
 
 ### 01 Trimming
 Contains trimmed fastq files and trimming logs in the `logs` folder (if SE and using CutAdapt)
 
-### 02 tRNA Alignment and tRNA Alignment Stats
+### 02 tRNA Alignment and Alignment Stats
 Contains multiple alignment files. Additionally, a third folder (02_tRNA_unaligned) holds fastq files containing reads that did not align to the tRNA-genome. 
 
 |Files|Content|Rule|
@@ -308,13 +285,10 @@ Contains general QC summary in html format with associated data tables
 
 
 
-
-
 ## Differential Expression Implementation
 Add implementation and rule graph here once finished...
 
-## Files
-Add file content here...
+
 
 ## Development Notes:
 
@@ -338,6 +312,13 @@ To run countreads.py (currently)
 ```shell
 python countreads.py --samplefile=MM_Working_Scripts/sample_file.txt --ensemblgtf=/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases/hg38_db/genes.gtf --trnaloci=/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases/hg38_db/db-trnaloci.bed --maturetrnas=/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases/hg38_db/db-maturetRNAs.bed --trnatable=/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases/hg38_db/db-trnatable.txt --genetypefile=test-genetypefile.txt --trnacounts=test-trna_counts.txt > OUTPUT.txt
 
+```
+
+```shell
+python make_all_feature_bed.py \
+    db-maturetRNAs.bed \
+    db-trnaloci.bed \
+    genes.gtf
 ```
 
 ## Contact
