@@ -2,7 +2,8 @@
 
 #SBATCH --job-name=cloverSeq
 #SBATCH --nodes=1
-#SBATCH --partition=standard
+#SBATCH --partition=preempt1
+#SBATCH --account=dac
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=16  
 #SBATCH --time=60:00:00
@@ -26,11 +27,21 @@ conda activate /dartfs/rc/nosnapshots/G/GMBSR_refs/envs/snakemake
 snakemake -s Snakefile \
     --use-conda \
     --conda-frontend conda \
-    --conda-prefix /dartfs/rc/nosnapshots/G/GMBSR_refs/envs/DAC-RNAseq-pipeline \
+    --conda-prefix /dartfs/rc/nosnapshots/G/GMBSR_refs/envs/GDSC-Clover-Seq \
     --profile cluster_profile \
     --rerun-incomplete \
     --keep-going 
     
 #----- END
 echo "End time: $(date)"
+
+#----- Run Testing workflow
+#snakemake -s database_Snakefile.smk \
+#    --configfile database_configs/test_new.yaml \
+#    --use-conda \
+#    --conda-frontend conda \
+#    --conda-prefix /dartfs/rc/nosnapshots/G/GMBSR_refs/envs/DAC-RNAseq-pipeline \
+#    --profile cluster_profile \
+#    --rerun-incomplete \
+#    --keep-going 
 
