@@ -109,11 +109,11 @@ References can be accessed at the following path on Discovery:
 
 If you do not wish to use a pre-built database, a fresh one can be created using the following steps.
 
-1. Update your `database_build.sh` script to point Snakemake to one of the database configs in `database_configs` folder. These configs are organism-specific and point to specific URLs on [gtRNAdb](https://gtrnadb.ucsc.edu). 
+1. Update your `module1_job.script.sh` script to point Snakemake to one of the database configs in `database_configs` folder. These configs are organism-specific and point to specific URLs on [gtRNAdb](https://gtrnadb.ucsc.edu). 
 
 ```shell
 #----- Snakemake call
-snakemake -s database_Snakefile.smk \
+snakemake -s module-1-build-db.smk \
     --configfile database_configs/hg38_db_config.yaml \     # EDIT THIS LINE
     --use-conda \
     --conda-frontend conda \
@@ -124,11 +124,11 @@ snakemake -s database_Snakefile.smk \
 
 ```
 
-2. Submit your `database_build.sh` script
+2. Submit your `module1_job.script` script
 
 ```shell
 #----- Submit snakemake job
-sbatch database_build.sh
+sbatch module1_job.script.sh
 
 ```
 
@@ -187,11 +187,11 @@ The `config.yaml` file provides important file paths that allow the Snakefile to
 |`nPenalty`|Penalty score for ambiguous bases (set to 5 to account for tRNA biology)|
 
 
-Modify the `job.script.sh` script accordingly to point to your config file using the `--configfile` argument. Below is an example using the hg38 tRNA genome and specifying to submit 10 jobs in parallel across different cluster nodes as specified by `--profile cluster_profile`
+Modify the `module2_job.script.sh` script accordingly to point to your config file using the `--configfile` argument. Below is an example using the hg38 tRNA genome and specifying to submit 10 jobs in parallel across different cluster nodes as specified by `--profile cluster_profile`
 
 ```shell
 #----- Run snakemake workflow
-snakemake -s Snakefile \
+snakemake -s module-2-preprocess.smk \
     --use-conda \
     --configfile /preprocessing_prebuilt_configs/hg38_config.yaml \     # EDIT THIS LINE
     --conda-frontend conda \
@@ -205,7 +205,7 @@ To submit your job, run the following code.
 
 ```shell
 #----- Submit snakemake job script
-sbatch job.script.sh
+sbatch module2_job.script.sh
 ```
 To check the status of your Snakemake job and all child jobs it spawns, run the following (replacing NETID with your Dartmouth NetID)
 
