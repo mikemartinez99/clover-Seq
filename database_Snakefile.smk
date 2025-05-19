@@ -86,7 +86,7 @@ rule generate_gtRNA_db:
         f"{genome}_db/db-locusnum.txt",
         f"{genome}_db/db-dbinfo.txt",
         f"{genome}_db/db-alignnum.txt"
-    conda: "clover-seq"
+    conda: "env_config/clover-seq.yaml"
     resources: cpus="10", maxtime="2:00:00", mem_mb="60gb"
     params:
         genome = config["genome"],
@@ -146,7 +146,7 @@ rule concat_tRNAs:
         genome = f"{genome}_db/genome.fa",
     output:
         tRNAgenome = f"{genome}_db/db-tRNAgenome.fa"
-    conda: "clover-seq"
+    conda: "env_config/clover-seq.yaml"
     resources: cpus="10", maxtime="2:00:00", mem_mb="60gb"
     shell: """
         
@@ -166,7 +166,7 @@ rule tRNA_bt2_index:
         f"{genome}_db/db-tRNAgenome.4.bt2l",
         f"{genome}_db/db-tRNAgenome.rev.1.bt2l",
         f"{genome}_db/db-tRNAgenome.rev.2.bt2l"
-    conda: "clover-seq"
+    conda: "env_config/clover-bowtie2.yaml"
     resources: cpus="10", maxtime="2:00:00", mem_mb="60gb"
     params:
         indexName = config["bt2_index"],
