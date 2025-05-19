@@ -14,9 +14,9 @@ Snakemake workflow for the comprehensive analyses of mature tRNAs and other smal
 - [Development To Do](#development-to-do)
 - [Introduction](#introduction)
 - [Installation](#installation)
-- [Databases](#databases)
+- [Database Build Module (Optional)](#database-building-module-optional)
 - [Database Build Implementation](#database-build-implementation)
-- [Pipeline Summary](#pipeline-summary)
+- [Preprocessing Module](#pipeline-summary)
 - [Preprocessing Implementation](#preprocessing-implementation)
 - [Preprocessing Outputs](#preprocessing-outputs)
     - [01 Trimming](#01-trimming)
@@ -25,8 +25,9 @@ Snakemake workflow for the comprehensive analyses of mature tRNAs and other smal
     - [04 smRNA Counts](#04-smrna-counts)
     - [05 Normalized](#05-normalized)
     - [06 PCA](#06-pca)
-    - [07 Plots](#07-plots)
-    - [08 QC](#08-qc)
+    - [07 Rds Files](#07-rds-files)
+    - [08 Plots](#08-plots)
+    - [09 QC](#08-qc)
 - [Differential Expression Implementation](#differential-expression-implementation)
 - [Files](#files)
 - [Development Notes](#development-notes)
@@ -59,51 +60,98 @@ python make_all_feature_bed.py \
 
 
 ## Introduction
-This pipeline supports the analysis of mature-tRNAs and other small RNAs (smRNAs) for human (hg38), mouse (mm10), and fly(dm6) genomes. While typical RNA-Seq preprocessing strategies are employed in this pipeline, special considerations to handle tRNA biology are included. Custom reference databases encompass the full host genome along with mature tRNA transcripts with the addition of 3' CCA tails not encoded genomically. 
+This pipeline supports the analysis of mature-tRNAs and other small RNAs (smRNAs) for human (hg38), mouse (mm10), and fly(dm6) genomes through 3 main modules: 
 
-Following preprocessing workflow, differential expression can be performed using the differential expression workflow included in this repo (FUTURE)
+<img src="img/pipeline_graphic.png" alt="Description" width="450" height="300" style="border: none;" />
+
+While typical RNA-Seq preprocessing strategies are emplyed in this pipeline, special considerations to handle tRNA biology are included. Custom reference databases encompass putative mature tRNAs as well as unique tRNA isodecoders as well as tRNA loci in the native host genome along with other annotated smRNAs including miRNA, sRNA, siRNA, snRNA, snoRNA, ribozymes and others. Mature tRNA transcripts are modified to include the addition of a 3' CCA tail which are not encoded genomically. Results are reported at two levels: the gene level which included mature tRNAs plus all other native tRNA-loci and smRNAs, and the isodecoder level, which is tRNA-specific.
 
 ## Installation
 To install this code, clone the github repository
 
 ```shell
+#----- Clone repository
 git clone https://github.com/mikemartinez99/clover-Seq
 
 ```
 
-Several [conda environments](https://anaconda.org/anaconda/conda) are required to run this code successfully and can be built using the associated yaml file in the [env_config folder](https://github.com/mikemartinez99/clover-Seq/tree/main/env_config) using the following command:
+Several [conda environments](https://anaconda.org/anaconda/conda) are required to run this code successfully. For your convenience, these conda environments have been prebuilt and are hosted publically at the following path:
+
+`/dartfs/rc/nosnapshots/G/GMBSR_refs/envs/GDSC-Clover-Seq`
+
+If you wish to build these environments yourself, the associated yaml file in the [env_config folder](https://github.com/mikemartinez99/clover-Seq/tree/main/env_config) can be built using the following command:
 
 ```shell
-conda env create -f name.yaml
+#----- Build conda environment
+conda env create -f env_config/<name.yaml>
 ```
 
 
-## Databases
+## Database Build Module (Optional)
 tRNA-genome references encompass the full host genome with additional tRNA-specific gene information obtained from [gtRNAdb](https://gtrnadb.ucsc.edu) through [tRNA-scan](https://lowelab.ucsc.edu/tRNAscan-SE/) experiments. Encompassed in these databases are bed files of mature tRNA sequences as well as native pre-tRNA loci in the host genome. Stockholm alignment files and alignment-number files help with downstream conversion of tRNA alignments to [Sprinzl-positions](http://polacek.dcbp.unibe.ch/publications/Holmes%20et%20al_tDR%20nomenclature_Nat.Meth_2023.pdf). 
 
 These references are pre-downloaded along with pre-built Bowtie2 indices and hosted on the [Genomics and Molecular Biology Shared Resources](https://geiselmed.dartmouth.edu/gsr/) on Discovery for ease of use and efficiency. However, if you wish to build from scratch, or customize the reference, a workflow for doing so is included. 
 
-For more information on the files included in the database, see [Files](#files)
+<img src="img/database_rulegraph.png" alt="Description" width="200" height="300"/>
+
+|Snakemake Rule|Purpose|Conda Environent|
+|--------------|-------|----------------|
+|`generate_gtRNA_db`|Download Ensembl GTF, gtRNA-db data tarball, genome and tRNA fasta file and build resulting tRNA database for downstream analysis in the preprocessing module|`clover-seq`|
+|`concat_tRNAs`|Concatenate mature tRNA fasta and genome fasta to get tRNA-genome fasta file for use in profiling all smRNAs|`clover-seq`|
+|`tRNA_bt2_index`|Create Bowtie2 index of tRNA-genome for use in alignment step of preprocessing module|`clover-bowtie2`|
+
+
+## Database Build Implementation
 
 References can be accessed at the following path on Discovery: 
 
 `/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases`
 
-## Database Build Implementation
-<img src="img/database_rulegraph.png" alt="Description" width="200" height="300"/>
+If you do not wish to use a pre-built database, a fresh one can be created using the following steps.
 
-Explanation here...
+1. Update your `database_build.sh` script to point Snakemake to one of the database configs in `database_configs` folder. These configs are organism-specific and point to specific URLs on [gtRNAdb](https://gtrnadb.ucsc.edu). 
 
+```shell
+#----- Snakemake call
+snakemake -s database_Snakefile.smk \
+    --configfile database_configs/hg38_db_config.yaml \     # EDIT THIS LINE
+    --use-conda \
+    --conda-frontend conda \
+    --conda-prefix /dartfs/rc/nosnapshots/G/GMBSR_refs/envs/GDSC-Clover-Seq \
+    --profile cluster_profile \
+    --rerun-incomplete \
+    --keep-going 
 
+```
 
-## Pipeline Summary
+2. Submit your `database_build.sh` script
+
+```shell
+#----- Submit snakemake job
+sbatch database_build.sh
+
+```
+
+To check the status of your Snakemake job and all child jobs it spawns, run the following (replacing NETID with your Dartmouth NetID)
+**Note** This applied for all 3 modules!
+
+```shell
+#----- Check user job status
+squeue | grep "NETID"
+```
+
+You will notice your directory will populate with logs following the convention: log_X_RuleID_JobID.out. For rules that run on a per-sample basis, there should be one log for each sample. For rules that run once for all samples together, there should be only a single log. 
+
+## Preprocessing Module
 Clover-Seq is adapted from the [tRAX Pipeline](https://github.com/UCSC-LoweLab/tRAX) to be implemented as a Snakemake workflow, allowing sample parallelization and improved modularity and efficiency. As input, this pipeline takes raw fastq.gz files, a config.yaml, and a sample metadata sheet.
+
+<img src="img/preprocessing_rulegraph.png" alt="Description" width="400" height="400"/>
 
 |Snakemake Rule|Purpose|Conda Environent|
 |--------------|-------|----------------|
 |`trimming`|Trim fastq files to remove adapters and reads not meeting size threshold|`clover-seq`|
-|`tRNA_align`|Align sequencing reads to combined tRNA sequences and host genome, perform length and quality filtering|`clover-seq`|
-|`tRNA_mark_duplicates`|Flag sequencing duplicates|`rnaseq1`|
+|`tRNA_align`|Align sequencing reads to combined tRNA sequences and host genome, perform length and quality filtering|`clover-bowtie2`|
+|`tRNA_mark_duplicates`|Flag sequencing duplicates|`Picard`|
 |`tRNA_map_stats`|Collate idxstats and flagstats metrics|`clover-seq`|
 |`tRNA_count`|Count tRNA isotype reads as well as gene-level tRNAs/smRNAs in the genome|`clover-seq`|
 |`read_length_distribution`|Collate read-length statistics for all reads (tRNA + non-tRNA)|`clover-seq`|
@@ -145,9 +193,9 @@ Modify the `job.script.sh` script accordingly to point to your config file using
 #----- Run snakemake workflow
 snakemake -s Snakefile \
     --use-conda \
-    --configfile /preprocessing_prebuilt_configs/hg38_config.yaml \
+    --configfile /preprocessing_prebuilt_configs/hg38_config.yaml \     # EDIT THIS LINE
     --conda-frontend conda \
-    --conda-prefix /dartfs/rc/nosnapshots/G/GMBSR_refs/envs/DAC-RNAseq-pipeline \
+    --conda-prefix /dartfs/rc/nosnapshots/G/GMBSR_refs/envs/GDSC-Clover-Seq \
     --profile cluster_profile \
     --rerun-incomplete \
     --keep-going 
@@ -161,12 +209,6 @@ sbatch job.script.sh
 ```
 To check the status of your Snakemake job and all child jobs it spawns, run the following (replacing NETID with your Dartmouth NetID)
 
-```shell
-#----- Check user job status
-squeue | grep "NETID"
-```
-
-You will notice your directory will populate with logs following the convention: log_X_RuleID_JobID.out. For rules that run on a per-sample basis, there should be one log for each sample. For rules that run once for all samples together, there should be only a single log. 
 
 ## Preprocessing Outputs
 The preprocessing module of this workflow contains 8 major output sections across multiple folders. Their outputs are explained below
@@ -183,8 +225,8 @@ Contains multiple alignment files. Additionally, a third folder (02_tRNA_unalign
 |`.alignment.log.txt`|Bowtie2 alignment log|`rule tRNA_alignment`|
 |`.mkdup.bam`|Filtered and sorted bam file with duplicates flagged|`rule tRNA_mark_duplicates`|
 |`.mkdup.log.txt`|Picard Markduplicates log file|`rule tRNA_mark_duplicates`|
-|`.mkdup.bam.idxstats`|Samtools idxstats metrics|`rule tRNA_map_stats`|
-|`.mkdup.bam.flagstat`|Samtools flagstat metrics|`rule tRNA_map_stats`|
+|`stats/.mkdup.bam.idxstats`|Samtools idxstats metrics|`rule tRNA_map_stats`|
+|`stats/.mkdup.bam.flagstat`|Samtools flagstat metrics|`rule tRNA_map_stats`|
 |`full_alignment_read_length_distribution.txt`|Per-sample read length distribution information for all reads|`read_length_distribution`|
 
 ### 03 tRNA Counts
@@ -217,6 +259,7 @@ Contains normalization information, and normalized tRNA counts.
 |`normalized_gene_level_counts.csv`|Per-sample normalized counts calculated by rlog transformation (DESeq2) for tRNA isodecoders + genomic smRNAs|`rule normalize_and_PCA`|
 |`tRNA_isotype_counts_size_factors`|Per-sample size factors calculated by median-of-ratios (DESeq2) for tRNA isotypes only|`rule normalize_and_PCA`|
 |`normalized_tRNA_isotype_counts.csv`|Per-sample normalized counts calculated by rlog transformation (DESeq2) for tRNA isotypes only|`rule normalize_and_PCA`|
+|`CCA_ends_normalized.csv`|CCA-end counts normalized using tRNA-isotype dataset size factors|`rule plot_counts`|
 
 ### 06 PCA
 Contains tabular data for principal component analysis and associated PCA plots.
@@ -230,11 +273,40 @@ Contains tabular data for principal component analysis and associated PCA plots.
 |`tRNA_isotype_loadings.csv`|PCA loadings per sample based on 500 most variable features for rlog-normalized tRNA isotypes only|`rule normalize_and_PCA`|
 |`tRNA_isotype_PCA.png`|PCA plot based on 500 most variable features for rlog-normalized tRNA isotypes only|`rule normalize_and_PCA`|
 |`PCA_Analysis_Summary.png`|Side by side PCA plots for full gene-level and tRNA only analysis|`rule normalize_and_PCA`|
+|`PCA_Direct_Comparison.png`|PCA data for both experiments on one plot to highlight shifts|`rule normalize_and_PCA`|
 
 
-### 07 QC
+### 07 RDS Files
+
+Contains DESeq2 serialized R-data objects to be used in the differential expression workflow.
+
+|Files|Content|Rule|
+|-----|-------|----|
+|`gene_level_DESeq2_object.Rds`|DESeq dataset object for tRNA isodecoders + genomic smRNAs dataset with (reference level set in config)|`rule normalize_and_PCA`|
+|`tRNA_isotype_DESeq2_object.Rds`|DESeq dataset object for tRNA isotypes only (reference level set in config)|`rule normalize_and_PCA`|
 
 ### 08 Plots
+Contains various plots to explore counts.
+
+|Files|Content|Rule|
+|-----|-------|----|
+`CCA_ends_normalized_absolute_abundances.png`|Absolute abundances of CCA end types per sample, normalized using tRNA-isotype size factors with resulting normalized tabular data saved in 05_normalized folder|`rule plot_counts`|
+|`CCA_ends_relative_abundances.png`|Relative abundances (calculated from non-normalized CCA-end counts) of CCA end types per sample|`rule plot_counts`|
+|`Grouped_boxplot_norm_tRNA_isotypes_by_Sample_and_Anticodon.png`|High detial plot showing counts of each tRNA isotype for specific codons|`rule plot_counts`|
+|`Isoacceptor_counts_normalized.png`|Normalized absolute abundance of each isoacceptor type|`rule plot_counts`|
+|`Isoacceptor_counts_by_sample_normalized.png`|Absolute composition of amino-acids by Sample|`rule plot_counts`|
+
+
+### 09 QC
+
+Contains general QC summary in html format with associated data tables
+
+|Files|Content|Rule|
+|-----|-------|----|
+|`tRNA_multi_QC_report_data`|Folder containing multi-qc data|`rule all`|
+|`tRNA_multi_QC_report.html`|Web viewable html summary of QC metrics for trimming and alignment|`rule all`|
+
+
 
 
 
