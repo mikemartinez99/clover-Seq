@@ -183,10 +183,10 @@ normalizedCounts <- ggplot2::ggplot(plot_data, aes(x = Isoacceptor, y = Count, f
     axis.text.x = element_text(angle = 45, hjust = 1),
     panel.background = element_rect(fill = "white", color = NA),  
     plot.background = element_rect(fill = "white", color = NA))
-ggplot2::ggsave(paste0(opDir, "tRNA_counts_normalized.png"),
+ggplot2::ggsave(paste0(opDir, "Isoacceptor_counts_by_sample_normalized.png"),
                 normalizedCounts, 
                 width = 12, height = 10)
-message("\tPlotted tRNA_counts_normalized.png\n")
+message("\tPlotted Isoacceptor_counts_by_sample_normalized.png\n")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # NORMALIZED ISOACCEPTOR ABSOLUTE ABUNDANCES PER SAMPLE
@@ -346,6 +346,113 @@ ggplot2::ggsave(paste0(opDir, "CCA_ends_normalized_absolute_abundances.png"),
                 endTypePlot, width = 12, height = 10)
 message("\tPlotted CCA_ends_normalized_absolute_abundances.png\n")
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# SMRNA DATA
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
+#----- Read in the data
+smRNA <- read_file_safe(paste0(smrnaDir, "smRNA_raw_counts_by_sample.txt"), sep = "\t", row.names = 1)
+smRNA$Type <- rownames(smRNA)
+
+#----- Calculate relative abundances and format
+smRNAlong <- smRNA %>%
+  tidyr::pivot_longer(-c(Type), names_to = "Sample", values_to = "Count") %>%
+  dplyr::group_by(Sample) %>%
+  dplyr::mutate(RelAbund = Count / sum(Count)) %>%
+  dplyr::mutate(Type2 = dplyr::recode(Type, 
+                        "miRNA" = "smRNA",
+                        "misc_RNA" = "Misc RNA",
+                        "Mt_rRNA" = "Mito RNA",
+                        "Mt_tRNA" = "Mito RNA",
+                        "other" = "Misc RNA",
+                        "pretRNA" = "tRNA",
+                        "ribozyme" = "Ribozyme",
+                        "rRNA" = "rRNA",
+                        "rRNA_pseudogene" = "rRNA",
+                        "scaRNA" = "smRNA",
+                        "snoRNA" = "smRNA",
+                        "snRNA" = "smRNA",
+                        "sRNA" = "smRNA",
+                        "tRNA" = "tRNA",
+                        "tRNA_antisense" = "tRNA")) %>%
+  dplyr::mutate(Type2 = factor(Type2, levels = c("Mito RNA", "Ribozyme", "rRNA", "smRNA", "tRNA", "Misc RNA")))
+
+#----- Add in Group information
+smRNAlong$Group <- meta$Group[match(smRNAlong$Sample, meta$Sample)]
+
+#----- Plot for higher-level relative abundances
+a <- ggplot2::ggplot(smRNAlong, aes(x = Sample, y = RelAbund, fill = Type2)) +
+  geom_bar(stat = "identity") +
+  labs(y = "Relative Abundance",
+       x = "",
+       fill = "RNA-Subgroup") +
+  facet_grid(~Group, scales = "free") +
+  theme_minimal(base_size = 16) +
+  theme(
+    legend.position = "right", 
+    legend.background = element_rect(fill = "white", color = NA),
+    axis.title = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.background = element_rect(fill = "white", color = NA),  
+    plot.background = element_rect(fill = "white", color = NA))
+
+
+#----- Subset for just smRNA subtype and calculate relative abundance of granular classifications
+smRNAtypes <- smRNAlong %>%
+  dplyr::filter(Type2 == "smRNA") %>%
+  dplyr::group_by(Sample) %>%
+  dplyr::mutate(RelAbund = Count / sum(Count))
+
+#----- Set color palette
+pal <- c("#A6CEE3", "#1F78B4", "#B2DF8A", "#33A02C", "#FB9A99", "#E31A1C", "#FDBF6F", "#FF7F00")
+
+#----- Plot granular relative abundances for smRNA subtype
+x <- ggplot2::ggplot(smRNAtypes, aes(x = Sample, y = RelAbund, fill = Type)) +
+  geom_bar(stat = "identity") +
+  geom_bar(stat = "identity") +
+  labs(y = "Relative Abundance",
+       x = "",
+       fill = "",
+       title = "smRNA Subgroup: Granular") +
+  facet_grid(~Group, scales = "free") +
+  scale_fill_manual(values = pal[1:5]) +
+  theme_minimal(base_size = 16) +
+  theme(
+    legend.position = "bottom", 
+    legend.background = element_rect(fill = "white", color = NA),
+    axis.title = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.background = element_rect(fill = "white", color = NA),  
+    plot.background = element_rect(fill = "white", color = NA))
+
+#----- Subset for just tRNA subtypes and calculate granular relative abundances
+tRNAtypes <- smRNAlong %>%
+  dplyr::filter(Type2 == "tRNA") %>%
+  dplyr::group_by(Sample) %>%
+  dplyr::mutate(RelAbund = Count / sum(Count))
+
+#----- Plot granular relative abundances for tRNA subtypes
+y <- ggplot2::ggplot(tRNAtypes, aes(x = Sample, y = RelAbund, fill = Type)) +
+  geom_bar(stat = "identity") +
+  geom_bar(stat = "identity") +
+  labs(y = "Relative Abundance",
+       x = "",
+       fill = "",
+       title = "tRNA Subgroup: Granular") +
+  facet_grid(~Group, scales = "free") +
+  scale_fill_manual(values = pal[6:8]) +
+  theme_minimal(base_size = 16) +
+  theme(
+    legend.position = "bottom", 
+    legend.background = element_rect(fill = "white", color = NA),
+    axis.title = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.background = element_rect(fill = "white", color = NA),  
+    plot.background = element_rect(fill = "white", color = NA))
+  
+subTypePlot <- cowplot::plot_grid(x, y, ncol = 2)
+full <- cowplot::plot_grid(a, subTypePlot, nrow = 2)
+ggplot2::ggsave(paste0(opDir, "smRNA_Relative_Abundances.png"), full, width = 12, height = 10)
+message("\tPlotted smRNA_Relative_Abundances.png")
 
 

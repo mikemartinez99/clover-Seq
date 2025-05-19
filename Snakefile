@@ -94,13 +94,16 @@ rule all:
         "06_PCA/tRNA_isotype_loadings.csv",
         "06_PCA/tRNA_isotype_PCA.png",
         "06_PCA/PCA_Analysis_Summary.png",
+        "07_rds_files/gene_level_DESeq2_object.Rds",
+        "07_rds_files/tRNA_isotype_DESeq2_object.Rds",
     
         #----- Rule plot_counts outputs
         "08_plots/Grouped_boxplot_norm_tRNA_isotypes_by_Sample_and_Anticodon.png",
-        "08_plots/tRNA_counts_normalized.png",
+        "08_plots/Isoacceptor_counts_by_sample_normalized.png",
         "08_plots/Isoacceptor_counts_normalized.png",
         "08_plots/CCA_ends_Relative_Abundances.png",
         "08_plots/CCA_ends_normalized_absolute_abundances.png",
+        "08_plots/smRNA_Relative_Abundances.png"
    
     output:
         "09_QC/tRNA_multi_QC_report.html"
@@ -119,6 +122,8 @@ rule all:
             03_tRNA_counts \
             -n 09_QC/tRNA_multi_QC_report.html \
             -c multiqc_config.yaml
+
+        rm 03_tRNA_counts/unique_tRNA_counts.txt
     
     """
 
@@ -390,7 +395,9 @@ rule normalize_and_PCA:
         "06_PCA/tRNA_isotype_variance_plot.png",
         "06_PCA/tRNA_isotype_loadings.csv",
         "06_PCA/tRNA_isotype_PCA.png",
-        "06_PCA/PCA_Analysis_Summary.png"
+        "06_PCA/PCA_Analysis_Summary.png",
+        "07_rds_files/gene_level_DESeq2_object.Rds",
+        "07_rds_files/tRNA_isotype_DESeq2_object.Rds"
     conda: "clover-seq"
     resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
     benchmark: "benchmarks/rule_normalize_and_PCA/normalize_and_PCA_bm.tsv"
@@ -412,10 +419,11 @@ rule plot_counts:
         "05_normalized/normalized_tRNA_isotype_counts.csv"
     output:
         "08_plots/Grouped_boxplot_norm_tRNA_isotypes_by_Sample_and_Anticodon.png",
-        "08_plots/tRNA_counts_normalized.png",
+        "08_plots/Isoacceptor_counts_by_sample_normalized.png",
         "08_plots/Isoacceptor_counts_normalized.png",
         "08_plots/CCA_ends_Relative_Abundances.png",
-        "08_plots/CCA_ends_normalized_absolute_abundances.png"
+        "08_plots/CCA_ends_normalized_absolute_abundances.png",
+        "08_plots/smRNA_Relative_Abundances.png"
     conda: "clover-seq"
     resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
     benchmark: "benchmarks/rule_plot_counts/plot_counts_bm.tsv"
