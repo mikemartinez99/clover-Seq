@@ -226,6 +226,8 @@ Contains detailed per-sample smRNA count information at the gene biotype level f
 |`read_length_distribution.txt`|Per-sample read length distribution for tRNAs split by pre-tRNAs and mature tRNAs|`rule smRNA_count`|
 |`smRNA_raw_counts_by_group.txt`|Per-group raw total counts for all smRNA gene biotypes|`rule smRNA_count`|
 |`smRNA_raw_counts_by_sample.txt`|Per-sample raw total counts for all smRNA gene biotypes|`rule smRNA_count`|
+|`raw_anticodon_counts_by_sample.txt`|Per-sample raw total counts for all anticodons|`rule smRNA_count`|
+|`subgroup_counts.txt`|Per-sample raw total counts grouped by tRNA or non-tRNA|`rule smRNA_count`| 
 
 ### 05 Normalized
 Contains normalization information, and normalized tRNA counts.
