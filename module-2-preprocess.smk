@@ -82,7 +82,9 @@ rule all:
             "raw_amino_counts_by_group.txt",
             "read_length_distribution.txt",
             "smRNA_raw_counts_by_group.txt",
-            "smRNA_raw_counts_by_sample.txt"]),
+            "smRNA_raw_counts_by_sample.txt",
+            "subroup_counts.txt",
+            "raw_anticodon_counts_by_sample.txt"]),
         
         #----- Rule normalize_and_PCA outputs
         expand("05_normalized/{file}", file = [
@@ -110,6 +112,7 @@ rule all:
             "CCA_ends_Relative_Abundances.png",
             "CCA_ends_normalized_absolute_abundances.png",
             "smRNA_Relative_Abundances.png"]),
+
     output:
         "09_QC/tRNA_multi_QC_report.html"
     conda: "env_config/clover-seq.yaml"
@@ -362,7 +365,9 @@ rule count_smRNAs:
         aminoCounts = "04_smRNA_counts/raw_amino_counts_by_group.txt",
         readLengths = "04_smRNA_counts/read_length_distribution.txt",
         groupCounts = "04_smRNA_counts/smRNA_raw_counts_by_group.txt",
-        counts = "04_smRNA_counts/smRNA_raw_counts_by_sample.txt"
+        counts = "04_smRNA_counts/smRNA_raw_counts_by_sample.txt",
+        type = "04_smRNA_counts/subroup_counts.txt",
+        anticodonCounts = "04_smRNA_counts/raw_anticodon_counts_by_sample.txt"
     conda: "env_config/clover-seq.yaml"
     resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
     benchmark: "benchmarks/rule_count_smRNAs/count_smRNAs_bm.tsv"
@@ -383,7 +388,9 @@ rule count_smRNAs:
             --trnaaminofile={output.aminoCounts} \
             --readlengthfile={output.readLengths} \
             --realcountfile={output.counts} \
-            --countfile={output.groupCounts}
+            --countfile={output.groupCounts} \
+            --mismatchfile={output.mismatch} \
+            --trnaanticodonfile={output.anticodonCounts}
     
     """
 
@@ -448,3 +455,28 @@ rule plot_counts:
 
     
     """
+
+#rule coverage:
+ #   input:
+ #       sizeFactors = "05_normalized/gene_level_counts_size_factors.csv"
+   # conda: "env_config/clover-seq.yaml"
+   # resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
+   # benchmark: "benchmarks/rule_coverage_coverage_bm.txt"
+   # params:
+    #    runFile = config["runFile"],
+     #   trna_db = config["trna_db"],
+    #    covScript = "code/getcoverage.py"
+   # shell: """
+    
+        #----- Run the coverage script
+    #    python {params.covScript} \
+     #       --bedfile={params.trna_db}/db-maturetRNAs.bed \
+     #       --samplefile={params.runFile} \
+     #       --stkfile={params.trna_db}/db-trnaalign.stk
+      #      --mincoverage=10 \
+      #      --sizefactors={input.sizeFactors} > "10_coverages/all_coverages.txt"
+
+    
+   #"""
+#This works locally....
+    #python code/getcoverage.py --bedfile=/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases/hg38_db/db-maturetRNAs.bed --samplefile=runfile.txt --stkfile=/dartfs-hpc/rc/lab/G/GMBSR_bioinfo/genomic_references/tRAX_databases/hg38_db/db-trnaalign.stk --mincoverage=10 --sizefactors=05_normalized/trna_isotype_counts_size_factors.csv --uniquegenome=unique > output_test.txt

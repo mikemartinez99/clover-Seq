@@ -1204,6 +1204,8 @@ if __name__ == "__main__":
                        help='optional read lengths table')
     parser.add_argument('--countfile',
                        help='optional read lengths table')
+    parser.add_argument('--mismatchfile')
+    parser.add_argument('--trnaanticodonfile')
     
     
     parser.add_argument('--bamnofeature', action="store_true", default=False,
