@@ -22,9 +22,6 @@
 import pandas as pd 
 import csv
 
-#----- Set config file
-configfile: "config.yaml"
-
 #----- Read in the sample data
 samples_df = pd.read_table(config["sample_txt"], delimiter = ",").set_index("Sample_ID", drop = False)
 sample_list = list(samples_df["Sample_ID"])
@@ -366,7 +363,7 @@ rule count_smRNAs:
         readLengths = "04_smRNA_counts/read_length_distribution.txt",
         groupCounts = "04_smRNA_counts/smRNA_raw_counts_by_group.txt",
         counts = "04_smRNA_counts/smRNA_raw_counts_by_sample.txt",
-        type = "04_smRNA_counts/subroup_counts.txt",
+        subGroupFile = "04_smRNA_counts/subroup_counts.txt",
         anticodonCounts = "04_smRNA_counts/raw_anticodon_counts_by_sample.txt"
     conda: "env_config/clover-seq.yaml"
     resources: cpus="12", maxtime="6:00:00", mem_mb="60gb"
@@ -389,7 +386,7 @@ rule count_smRNAs:
             --readlengthfile={output.readLengths} \
             --realcountfile={output.counts} \
             --countfile={output.groupCounts} \
-            --mismatchfile={output.mismatch} \
+            --mismatchfile={output.subGroupFile} \
             --trnaanticodonfile={output.anticodonCounts}
     
     """
