@@ -315,7 +315,7 @@ ggplot2::ggsave(trnaVar, filename = paste0(pcaDir, "tRNA_isotype_variance_plot.p
 message("\tPlotted tRNA_isotype_variance_plot.png\n")
 
 #----- Calculate PCs and extract loadings
-PCstrna <- generatePCs(ddstrnaRlogMat, trnaVars, 500)
+PCstrna <- generatePCs(ddstrnaRlogMat, trnaVars, length(variancetrna))
 loadingstrna <- PCstrna[[1]]
 loadingstrna$Sample <- rownames(loadingstrna)
 
